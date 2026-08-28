@@ -1,0 +1,1304 @@
+/* ============================================================
+CINESEARCH — Hoja de estilos principal
+Metodología: BEM (Block__Element--Modifier)
+Enfoque:     Mobile-first (base = móvil, escala hacia arriba)
+Tema:        Dark mode + Glassmorphism
+Tipografía:  Outfit (títulos) + Inter (cuerpo)
+Acento:      #F5C518 (amarillo IMDb)
+============================================================ */
+
+
+/* ============================================================
+1. CUSTOM PROPERTIES (Design Tokens)
+Centraliza todos los valores reutilizables. Si quieres
+cambiar el acento o el fondo, solo editas aquí.
+============================================================ */
+:root {
+    /* — Paleta base — */
+    --color-bg: #0A0A0F;
+    /* Fondo de página: negro profundo */
+    --color-surface: #141420;
+    /* Superficies elevadas: tarjetas, header */
+    --color-surface-2: #1E1E2E;
+    /* Superficies de segundo nivel */
+    --color-border: rgba(255, 255, 255, 0.07);
+    /* Bordes sutiles */
+
+    /* — Acento — */
+    --color-accent: #F5C518;
+    /* Amarillo IMDb — botones, highlights */
+    --color-accent-dim: rgba(245, 197, 24, 0.15);
+    /* Acento con opacidad */
+    --color-accent-glow: rgba(245, 197, 24, 0.35);
+    /* Para sombras de glow */
+
+    /* — Texto — */
+    --color-text-primary: #F0F0F5;
+    /* Texto principal: casi blanco */
+    --color-text-secondary: #8A8A9E;
+    /* Texto secundario: gris azulado */
+    --color-text-muted: #55556A;
+    /* Texto deshabilitado / placeholder */
+
+    /* — Glassmorphism — */
+    --glass-bg: rgba(20, 20, 32, 0.75);
+    /* Fondo glass translúcido */
+    --glass-blur: 16px;
+    /* Intensidad del blur */
+    --glass-border: rgba(255, 255, 255, 0.1);
+    /* Borde glass */
+
+    /* — Tipografía — */
+    --font-display: 'Outfit', sans-serif;
+    /* Títulos, marca, UI */
+    --font-body: 'Inter', sans-serif;
+    /* Cuerpo, datos, descripciones */
+
+    /* Escala tipográfica — mobile */
+    --text-xs: 0.75rem;
+    /* 12px */
+    --text-sm: 0.875rem;
+    /* 14px */
+    --text-base: 1rem;
+    /* 16px */
+    --text-lg: 1.125rem;
+    /* 18px */
+    --text-xl: 1.25rem;
+    /* 20px */
+    --text-2xl: 1.5rem;
+    /* 24px */
+    --text-3xl: 1.875rem;
+    /* 30px */
+    --text-4xl: 2.25rem;
+    /* 36px */
+
+    /* — Espaciado — */
+    --space-1: 0.25rem;
+    /*  4px */
+    --space-2: 0.5rem;
+    /*  8px */
+    --space-3: 0.75rem;
+    /* 12px */
+    --space-4: 1rem;
+    /* 16px */
+    --space-5: 1.25rem;
+    /* 20px */
+    --space-6: 1.5rem;
+    /* 24px */
+    --space-8: 2rem;
+    /* 32px */
+    --space-10: 2.5rem;
+    /* 40px */
+    --space-12: 3rem;
+    /* 48px */
+    --space-16: 4rem;
+    /* 64px */
+
+    /* — Radios de borde — */
+    --radius-sm: 6px;
+    --radius-md: 12px;
+    --radius-lg: 16px;
+    --radius-xl: 24px;
+    --radius-full: 9999px;
+
+    /* — Sombras — */
+    --shadow-sm: 0 2px 8px rgba(0, 0, 0, 0.3);
+    --shadow-md: 0 4px 20px rgba(0, 0, 0, 0.4);
+    --shadow-lg: 0 8px 40px rgba(0, 0, 0, 0.5);
+    --shadow-accent: 0 0 20px var(--color-accent-glow);
+
+    /* — Transiciones — */
+    --transition-fast: 150ms ease;
+    --transition-normal: 250ms ease;
+    --transition-slow: 400ms ease;
+
+    /* — Layout — */
+    --header-height: 72px;
+    --content-max-w: 1400px;
+    --content-padding: var(--space-4);
+    /* Padding lateral en móvil */
+}
+
+/* Breakpoints de referencia (en comentarios, no son variables CSS):
+tablet: 640px  (sm)
+desktop-sm: 1024px (md)
+desktop-lg: 1280px (lg) */
+
+
+/* ============================================================
+2. RESET & BASE
+Normalización mínima para comportamiento predecible
+============================================================ */
+
+/* Box model universal */
+*,
+*::before,
+*::after {
+    box-sizing: border-box;
+    margin: 0;
+    padding: 0;
+}
+
+/* Root: scroll suave, color de fondo y texto base */
+html {
+    scroll-behavior: smooth;
+    background-color: var(--color-bg);
+    color: var(--color-text-primary);
+}
+
+/* Body: fuente principal, altura mínima completa */
+body {
+    font-family: var(--font-body);
+    font-size: var(--text-base);
+    line-height: 1.6;
+    min-height: 100dvh;
+    /* dvh: viewport dinámico (sin barra del navegador) */
+    display: flex;
+    flex-direction: column;
+    -webkit-font-smoothing: antialiased;
+    /* Suavizado de fuentes en WebKit */
+    overflow-x: hidden;
+}
+
+/* Imágenes responsivas por defecto */
+img {
+    max-width: 100%;
+    height: auto;
+    display: block;
+}
+
+/* Listas: sin estilos por defecto (BEM maneja la presentación) */
+ul,
+ol {
+    list-style: none;
+}
+
+/* Links: sin subrayado por defecto */
+a {
+    color: inherit;
+    text-decoration: none;
+}
+
+/* Botones: sin estilos nativos del navegador */
+button {
+    cursor: pointer;
+    border: none;
+    background: none;
+    font-family: inherit;
+    font-size: inherit;
+    color: inherit;
+}
+
+/* Input: sin estilos nativos */
+input {
+    font-family: inherit;
+    font-size: inherit;
+    border: none;
+    outline: none;
+    background: none;
+    color: inherit;
+}
+
+/* ============================================================
+3. UTILIDADES
+Clases de apoyo reutilizables (no BEM, son helpers)
+============================================================ */
+
+/* Oculta visualmente pero mantiene accesible para screen readers */
+.sr-only {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    padding: 0;
+    margin: -1px;
+    overflow: hidden;
+    clip: rect(0, 0, 0, 0);
+    white-space: nowrap;
+    border: 0;
+}
+
+/* Foco visible para teclado (accesibilidad) */
+:focus-visible {
+    outline: 2px solid var(--color-accent);
+    outline-offset: 3px;
+    border-radius: var(--radius-sm);
+}
+
+/* Respeta preferencia de movimiento reducido */
+@media (prefers-reduced-motion: reduce) {
+
+    *,
+    *::before,
+    *::after {
+        animation-duration: 0.01ms !important;
+        transition-duration: 0.01ms !important;
+    }
+}
+
+
+/* ============================================================
+4. LAYOUT PRINCIPAL
+Estructura de página: header fijo + main + footer
+============================================================ */
+
+/* Main: ocupa el espacio restante verticalmente */
+.main {
+    flex: 1;
+    padding-top: var(--header-height);
+    /* Compensa el header fixed */
+}
+
+/* Contenedor centralizado con padding lateral */
+.container {
+    width: 100%;
+    max-width: var(--content-max-w);
+    margin-inline: auto;
+    padding-inline: var(--content-padding);
+}
+
+
+/* ============================================================
+5. BLOQUE: HEADER
+Barra de navegación con glassmorphism, fija en la parte superior
+============================================================ */
+
+.header {
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    z-index: 100;
+    height: var(--header-height);
+
+    /* Glassmorphism */
+    background: var(--glass-bg);
+    backdrop-filter: blur(var(--glass-blur));
+    -webkit-backdrop-filter: blur(var(--glass-blur));
+    /* Safari */
+    border-bottom: 1px solid var(--glass-border);
+}
+
+/* Contenido interno del header: flex row alineado */
+.header__inner {
+    display: flex;
+    align-items: center;
+    gap: var(--space-4);
+    height: 100%;
+    max-width: var(--content-max-w);
+    margin-inline: auto;
+    padding-inline: var(--content-padding);
+}
+
+/* — ELEMENTO: Marca/Logo — */
+.header__brand {
+    display: flex;
+    align-items: center;
+    gap: var(--space-2);
+    flex-shrink: 0;
+    /* No se comprime cuando el espacio escasea */
+    text-decoration: none;
+}
+
+.header__brand-icon {
+    width: 28px;
+    height: 28px;
+    color: var(--color-accent);
+    flex-shrink: 0;
+}
+
+.header__brand-name {
+    font-family: var(--font-display);
+    font-size: var(--text-xl);
+    font-weight: 700;
+    color: var(--color-text-primary);
+    letter-spacing: -0.02em;
+}
+
+/* "Search" en dorado para contraste */
+.header__brand-accent {
+    color: var(--color-accent);
+}
+
+
+/* ============================================================
+6. BLOQUE: SEARCH
+Barra de búsqueda con sugerencias (historial)
+============================================================ */
+
+.search {
+    display: flex;
+    align-items: center;
+    gap: var(--space-2);
+    flex: 1;
+    /* Ocupa todo el espacio disponible en el header */
+    max-width: 600px;
+}
+
+/* Wrapper relativo para posicionar el icono y el dropdown */
+.search__wrapper {
+    position: relative;
+    flex: 1;
+}
+
+/* Input principal de búsqueda */
+.search__input {
+    width: 100%;
+    height: 44px;
+    padding: 0 var(--space-4) 0 var(--space-10);
+    /* Padding izq para el icono */
+    background: var(--color-surface-2);
+    border: 1px solid var(--color-border);
+    border-radius: var(--radius-full);
+    color: var(--color-text-primary);
+    font-size: var(--text-sm);
+    transition: border-color var(--transition-fast), box-shadow var(--transition-fast);
+}
+
+/* Estado de foco en el input */
+.search__input:focus {
+    border-color: var(--color-accent);
+    box-shadow: 0 0 0 3px var(--color-accent-dim);
+    outline: none;
+    /* El outline lo manejamos con box-shadow */
+}
+
+/* Placeholder */
+.search__input::placeholder {
+    color: var(--color-text-muted);
+}
+
+/* Icono de lupa — posicionado absolutamente dentro del wrapper */
+.search__icon {
+    position: absolute;
+    left: var(--space-3);
+    top: 50%;
+    transform: translateY(-50%);
+    width: 18px;
+    height: 18px;
+    color: var(--color-text-muted);
+    pointer-events: none;
+    /* No captura clicks, es solo decorativo */
+    transition: color var(--transition-fast);
+}
+
+/* El icono se ilumina cuando el input tiene foco */
+.search__input:focus~.search__icon {
+    color: var(--color-accent);
+}
+
+/* — ELEMENTO: Sugerencias (historial) — */
+.search__suggestions {
+    position: absolute;
+    top: calc(100% + var(--space-2));
+    left: 0;
+    right: 0;
+    z-index: 200;
+
+    background: var(--color-surface);
+    border: 1px solid var(--color-border);
+    border-radius: var(--radius-md);
+    box-shadow: var(--shadow-md);
+    overflow: hidden;
+
+    /* Animación de aparición */
+    animation: slideDown var(--transition-normal) ease;
+}
+
+@keyframes slideDown {
+    from {
+        opacity: 0;
+        transform: translateY(-8px);
+    }
+
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+/* Cada ítem del historial */
+.search__suggestion-item {
+    display: flex;
+    align-items: center;
+    gap: var(--space-3);
+    padding: var(--space-3) var(--space-4);
+    cursor: pointer;
+    font-size: var(--text-sm);
+    color: var(--color-text-secondary);
+    transition: background var(--transition-fast), color var(--transition-fast);
+}
+
+.search__suggestion-item:hover,
+.search__suggestion-item:focus {
+    background: var(--color-surface-2);
+    color: var(--color-text-primary);
+    outline: none;
+}
+
+/* Icono de reloj antes de cada sugerencia */
+.search__suggestion-item::before {
+    content: '🕐';
+    font-size: var(--text-xs);
+    flex-shrink: 0;
+}
+
+/* — ELEMENTO: Botón de búsqueda — */
+.search__btn {
+    height: 44px;
+    padding: 0 var(--space-5);
+    background: var(--color-accent);
+    color: #0A0A0F;
+    /* Negro sobre amarillo para máximo contraste */
+    font-family: var(--font-display);
+    font-size: var(--text-sm);
+    font-weight: 600;
+    border-radius: var(--radius-full);
+    flex-shrink: 0;
+    transition: background var(--transition-fast), transform var(--transition-fast), box-shadow var(--transition-fast);
+    white-space: nowrap;
+}
+
+.search__btn:hover {
+    background: #FFD700;
+    /* Amarillo más brillante en hover */
+    box-shadow: var(--shadow-accent);
+    transform: translateY(-1px);
+}
+
+.search__btn:active {
+    transform: translateY(0);
+}
+
+
+/* ============================================================
+7. BLOQUE: VIEW (Vistas)
+Sistema de vistas que se alternan (home / results / detail)
+============================================================ */
+
+.view {
+    min-height: calc(100dvh - var(--header-height));
+}
+
+/* Oculta una vista — JS agrega/quita el atributo 'hidden' */
+.view[hidden] {
+    display: none;
+}
+
+
+/* ============================================================
+8. BLOQUE: HERO (Vista Home)
+Pantalla de bienvenida centrada verticalmente
+============================================================ */
+
+.view--home {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: var(--space-8) var(--content-padding);
+}
+
+.hero {
+    text-align: center;
+    max-width: 540px;
+}
+
+.hero__icon {
+    font-size: 4rem;
+    margin-bottom: var(--space-4);
+    animation: float 3s ease-in-out infinite;
+}
+
+/* Animación de flotación sutil para el emoji */
+@keyframes float {
+
+    0%,
+    100% {
+        transform: translateY(0);
+    }
+
+    50% {
+        transform: translateY(-8px);
+    }
+}
+
+.hero__title {
+    font-family: var(--font-display);
+    font-size: var(--text-4xl);
+    font-weight: 800;
+    color: var(--color-text-primary);
+    letter-spacing: -0.03em;
+    line-height: 1.1;
+    margin-bottom: var(--space-4);
+}
+
+.hero__subtitle {
+    font-size: var(--text-lg);
+    color: var(--color-text-secondary);
+    line-height: 1.6;
+    margin-bottom: var(--space-8);
+}
+
+/* — ELEMENTO: Sugerencias de búsqueda rápida — */
+.hero__suggestions {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    justify-content: center;
+    gap: var(--space-2);
+}
+
+.hero__label {
+    font-size: var(--text-sm);
+    color: var(--color-text-muted);
+    margin-right: var(--space-1);
+}
+
+/* — BLOQUE: Chip — (botón de sugerencia) */
+.chip {
+    padding: var(--space-2) var(--space-4);
+    background: var(--color-surface-2);
+    border: 1px solid var(--color-border);
+    border-radius: var(--radius-full);
+    font-size: var(--text-sm);
+    color: var(--color-text-secondary);
+    transition: all var(--transition-fast);
+}
+
+.chip:hover {
+    background: var(--color-accent-dim);
+    border-color: var(--color-accent);
+    color: var(--color-accent);
+}
+
+
+/* ============================================================
+9. BLOQUE: RESULTS (Vista de resultados)
+============================================================ */
+
+.view--results {
+    padding: var(--space-8) var(--content-padding);
+    max-width: var(--content-max-w);
+    margin-inline: auto;
+}
+
+/* — ELEMENTO: Cabecera de resultados — */
+.results-header {
+    margin-bottom: var(--space-6);
+}
+
+.results-header__info {
+    font-size: var(--text-sm);
+    color: var(--color-text-secondary);
+}
+
+.results-header__query {
+    color: var(--color-text-primary);
+    font-family: var(--font-display);
+}
+
+.results-header__count {
+    color: var(--color-text-muted);
+    font-size: var(--text-xs);
+    margin-left: var(--space-2);
+}
+
+
+/* ============================================================
+10. BLOQUE: STATE (Carga / Error)
+Componente de estado centrado verticalmente
+============================================================ */
+
+.state {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: var(--space-4);
+    padding: var(--space-16) var(--space-4);
+    text-align: center;
+}
+
+.state[hidden] {
+    display: none;
+}
+
+.state__icon {
+    font-size: 3rem;
+}
+
+.state__text {
+    font-size: var(--text-base);
+    color: var(--color-text-secondary);
+    max-width: 320px;
+}
+
+/* — MODIFICADOR: Cargando — */
+.state--loading .state__text {
+    color: var(--color-text-muted);
+    font-size: var(--text-sm);
+}
+
+/* — BLOQUE: Loader (tres puntos animados) — */
+.loader {
+    display: flex;
+    gap: var(--space-2);
+}
+
+.loader__dot {
+    width: 10px;
+    height: 10px;
+    background: var(--color-accent);
+    border-radius: var(--radius-full);
+    animation: bounce 1.2s ease-in-out infinite;
+}
+
+/* Cada punto tiene un delay diferente para efecto de ola */
+.loader__dot:nth-child(1) {
+    animation-delay: 0s;
+}
+
+.loader__dot:nth-child(2) {
+    animation-delay: 0.2s;
+}
+
+.loader__dot:nth-child(3) {
+    animation-delay: 0.4s;
+}
+
+@keyframes bounce {
+
+    0%,
+    80%,
+    100% {
+        transform: scale(0.6);
+        opacity: 0.4;
+    }
+
+    40% {
+        transform: scale(1);
+        opacity: 1;
+    }
+}
+
+/* — MODIFICADOR: Error — */
+.state--error .state__text {
+    color: #FF6B6B;
+}
+
+
+/* ============================================================
+11. BLOQUE: MOVIES GRID
+Grid responsivo de cards — mobile-first
+Columnas: 1 móvil → 2 tablet → 4 desktop
+============================================================ */
+
+.movies-grid {
+    display: grid;
+    /* Mobile: 1 columna que ocupa todo el ancho */
+    grid-template-columns: 1fr;
+    gap: var(--space-4);
+    margin-bottom: var(--space-8);
+}
+
+/* Tablet: 2 columnas */
+@media (min-width: 640px) {
+    .movies-grid {
+        grid-template-columns: repeat(2, 1fr);
+    }
+}
+
+/* Desktop: 4 columnas */
+@media (min-width: 1024px) {
+    .movies-grid {
+        grid-template-columns: repeat(4, 1fr);
+    }
+}
+
+
+/* ============================================================
+12. BLOQUE: MOVIE-CARD
+Card individual con efecto "cortina de cine" en hover:
+el overlay sube desde abajo revelando título y año
+sobre el póster. Es la firma visual del proyecto.
+============================================================ */
+
+/* El <li> es el elemento raíz de la card */
+.movie-card {
+    position: relative;
+    border-radius: var(--radius-lg);
+    overflow: hidden;
+    /* Clip para el efecto de cortina */
+    cursor: pointer;
+
+    /* Aspecto 2:3 (típico de póster de cine) */
+    aspect-ratio: 2 / 3;
+
+    background: var(--color-surface);
+    border: 1px solid var(--color-border);
+    box-shadow: var(--shadow-sm);
+
+    transition: transform var(--transition-normal),
+        box-shadow var(--transition-normal),
+        border-color var(--transition-normal);
+}
+
+/* Efecto de elevación en hover */
+.movie-card:hover {
+    transform: translateY(-6px) scale(1.02);
+    box-shadow: var(--shadow-lg), var(--shadow-accent);
+    border-color: var(--color-accent);
+}
+
+/* — ELEMENTO: Imagen del póster — */
+.movie-card__poster {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    /* Recorta la imagen manteniendo proporciones */
+    display: block;
+    transition: transform var(--transition-slow);
+}
+
+/* Zoom sutil en la imagen cuando la card está en hover */
+.movie-card:hover .movie-card__poster {
+    transform: scale(1.05);
+}
+
+/* — ELEMENTO: Overlay (efecto cortina) —
+Gradiente que está fuera del campo visual (translateY 100%)
+y sube al hacer hover. Cubre la mitad inferior del póster. */
+.movie-card__overlay {
+    position: absolute;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    padding: var(--space-6) var(--space-4) var(--space-4);
+
+    /* Gradiente: transparente arriba → fondo oscuro abajo */
+    background: linear-gradient(to top,
+            rgba(10, 10, 15, 0.97) 0%,
+            rgba(10, 10, 15, 0.8) 50%,
+            transparent 100%);
+
+    /* Estado inicial: cortina abajo (oculta) */
+    transform: translateY(100%);
+    transition: transform var(--transition-normal);
+}
+
+/* La cortina sube en hover */
+.movie-card:hover .movie-card__overlay {
+    transform: translateY(0);
+}
+
+/* — ELEMENTO: Línea dorada decorativa — */
+.movie-card__line {
+    width: 0;
+    /* Empieza sin ancho */
+    height: 2px;
+    background: var(--color-accent);
+    margin-bottom: var(--space-3);
+    transition: width var(--transition-slow) var(--transition-fast);
+    /* El delay hace que la línea aparezca después de que la cortina sube */
+}
+
+.movie-card:hover .movie-card__line {
+    width: 40px;
+}
+
+/* — ELEMENTO: Título de la película — */
+.movie-card__title {
+    font-family: var(--font-display);
+    font-size: var(--text-base);
+    font-weight: 600;
+    color: var(--color-text-primary);
+    line-height: 1.3;
+    /* Limita a 2 líneas con ellipsis si el título es muy largo */
+    display: -webkit-box;
+    line-clamp: 2;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+    margin-bottom: var(--space-1);
+}
+
+/* — ELEMENTO: Año de la película — */
+.movie-card__year {
+    font-size: var(--text-xs);
+    color: var(--color-accent);
+    font-weight: 500;
+    letter-spacing: 0.05em;
+}
+
+/* — ELEMENTO: Placeholder (cuando no hay póster) —
+     Se muestra en lugar de la imagen si la API no devuelve URL */
+.movie-card__placeholder {
+    width: 100%;
+    height: 100%;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: var(--space-3);
+    background: var(--color-surface-2);
+    color: var(--color-text-muted);
+    font-size: var(--text-sm);
+}
+
+.movie-card__placeholder-icon {
+    font-size: 3rem;
+    opacity: 0.4;
+}
+
+
+/* ============================================================
+13. BLOQUE: PAGINATION
+Controles de paginación: anterior / página actual / siguiente
+============================================================ */
+
+.pagination {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: var(--space-4);
+    padding: var(--space-4) 0 var(--space-2);
+}
+
+.pagination[hidden] {
+    display: none;
+}
+
+/* — ELEMENTO: Botones anterior/siguiente — */
+.pagination__btn {
+    display: flex;
+    align-items: center;
+    gap: var(--space-2);
+    height: 40px;
+    padding: 0 var(--space-5);
+
+    background: var(--color-surface-2);
+    border: 1px solid var(--color-border);
+    border-radius: var(--radius-full);
+
+    font-family: var(--font-display);
+    font-size: var(--text-sm);
+    font-weight: 500;
+    color: var(--color-text-secondary);
+
+    transition: all var(--transition-fast);
+}
+
+.pagination__btn svg {
+    width: 16px;
+    height: 16px;
+    flex-shrink: 0;
+}
+
+.pagination__btn:hover:not(:disabled) {
+    background: var(--color-accent-dim);
+    border-color: var(--color-accent);
+    color: var(--color-accent);
+}
+
+/* Estado deshabilitado */
+.pagination__btn:disabled {
+    opacity: 0.35;
+    cursor: not-allowed;
+}
+
+/* — ELEMENTO: Indicador de página — */
+.pagination__info {
+    font-size: var(--text-sm);
+    color: var(--color-text-muted);
+}
+
+.pagination__info strong {
+    color: var(--color-text-primary);
+    font-family: var(--font-display);
+}
+
+
+/* ============================================================
+14. BLOQUE: DETAIL (Vista de detalle de película)
+Layout de dos columnas: póster | información
+Con imagen de fondo desenfocada como backdrop
+============================================================ */
+
+.view--detail {
+    position: relative;
+    padding: var(--space-8) var(--content-padding);
+    max-width: var(--content-max-w);
+    margin-inline: auto;
+}
+
+/* — BLOQUE: Botón de volver — */
+.btn-back {
+    display: inline-flex;
+    align-items: center;
+    gap: var(--space-2);
+    margin-bottom: var(--space-6);
+    padding: var(--space-2) var(--space-4);
+
+    background: var(--color-surface-2);
+    border: 1px solid var(--color-border);
+    border-radius: var(--radius-full);
+
+    font-size: var(--text-sm);
+    font-weight: 500;
+    color: var(--color-text-secondary);
+
+    transition: all var(--transition-fast);
+}
+
+.btn-back svg {
+    width: 16px;
+    height: 16px;
+}
+
+.btn-back:hover {
+    background: var(--color-accent-dim);
+    border-color: var(--color-accent);
+    color: var(--color-accent);
+    transform: translateX(-2px);
+}
+
+/* — BLOQUE: Detail (artículo de detalle) — */
+.detail {
+    position: relative;
+    border-radius: var(--radius-xl);
+    overflow: hidden;
+    border: 1px solid var(--color-border);
+}
+
+/* — ELEMENTO: Backdrop (imagen desenfocada de fondo) — */
+.detail__backdrop {
+    position: absolute;
+    inset: 0;
+    /* Equivale a top/right/bottom/left: 0 */
+    background-size: cover;
+    background-position: center;
+    filter: blur(40px) brightness(0.2) saturate(0.8);
+    transform: scale(1.1);
+    /* Evita bordes del blur en las esquinas */
+    z-index: 0;
+}
+
+/* — ELEMENTO: Inner (contenido sobre el backdrop) — */
+.detail__inner {
+    position: relative;
+    z-index: 1;
+
+    /* Mobile: columna única */
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-8);
+    padding: var(--space-8) var(--space-6);
+
+    /* Glass sobre el backdrop */
+    background: rgba(10, 10, 15, 0.65);
+    backdrop-filter: blur(4px);
+}
+
+/* Desktop: dos columnas (póster | info) */
+@media (min-width: 768px) {
+    .detail__inner {
+        flex-direction: row;
+        align-items: flex-start;
+        gap: var(--space-10);
+    }
+}
+
+/* — ELEMENTO: Columna del póster — */
+.detail__poster-col {
+    flex-shrink: 0;
+}
+
+/* — ELEMENTO: Póster grande — */
+.detail__poster {
+    width: 100%;
+    max-width: 260px;
+    border-radius: var(--radius-lg);
+    box-shadow: var(--shadow-lg), 0 0 60px rgba(0, 0, 0, 0.5);
+    margin-inline: auto;
+    /* Centrado en móvil */
+
+    /* En desktop, no se centra */
+    @media (min-width: 768px) {
+        width: 220px;
+        margin-inline: 0;
+    }
+}
+
+/* — ELEMENTO: Columna de información — */
+.detail__info-col {
+    flex: 1;
+    min-width: 0;
+    /* Evita desbordamiento en flex */
+}
+
+/* — ELEMENTO: Géneros (chips) — */
+.detail__genres {
+    display: flex;
+    flex-wrap: wrap;
+    gap: var(--space-2);
+    margin-bottom: var(--space-4);
+}
+
+/* Cada chip de género */
+.detail__genre-tag {
+    padding: var(--space-1) var(--space-3);
+    background: var(--color-accent-dim);
+    border: 1px solid rgba(245, 197, 24, 0.3);
+    border-radius: var(--radius-full);
+    font-size: var(--text-xs);
+    font-weight: 500;
+    color: var(--color-accent);
+    font-family: var(--font-display);
+    letter-spacing: 0.03em;
+}
+
+/* — ELEMENTO: Título — */
+.detail__title {
+    font-family: var(--font-display);
+    font-size: var(--text-3xl);
+    font-weight: 800;
+    color: var(--color-text-primary);
+    letter-spacing: -0.03em;
+    line-height: 1.15;
+    margin-bottom: var(--space-4);
+}
+
+@media (min-width: 768px) {
+    .detail__title {
+        font-size: var(--text-4xl);
+    }
+}
+
+/* — ELEMENTO: Metadatos (año · duración · rating) — */
+.detail__meta {
+    display: flex;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: var(--space-2);
+    margin-bottom: var(--space-6);
+}
+
+.detail__meta-item {
+    font-size: var(--text-sm);
+    color: var(--color-text-secondary);
+    font-family: var(--font-display);
+}
+
+.detail__meta-sep {
+    color: var(--color-text-muted);
+}
+
+/* — MODIFICADOR: Rating con estrella dorada — */
+.detail__meta-item--rating {
+    display: flex;
+    align-items: center;
+    gap: var(--space-1);
+    color: var(--color-accent);
+}
+
+.detail__star {
+    width: 14px;
+    height: 14px;
+    color: var(--color-accent);
+}
+
+.detail__meta-item--rating strong {
+    font-size: var(--text-base);
+    color: var(--color-text-primary);
+}
+
+.detail__meta-item--rating small {
+    font-size: var(--text-xs);
+    color: var(--color-text-muted);
+}
+
+/* — ELEMENTO: Sección (sinopsis, director, reparto) — */
+.detail__section {
+    margin-bottom: var(--space-5);
+}
+
+.detail__section:last-child {
+    margin-bottom: 0;
+}
+
+/* — ELEMENTO: Título de sección — */
+.detail__section-title {
+    font-family: var(--font-display);
+    font-size: var(--text-xs);
+    font-weight: 600;
+    color: var(--color-accent);
+    text-transform: uppercase;
+    letter-spacing: 0.1em;
+    margin-bottom: var(--space-2);
+}
+
+/* — ELEMENTO: Sinopsis — */
+.detail__plot {
+    font-size: var(--text-sm);
+    color: var(--color-text-secondary);
+    line-height: 1.7;
+}
+
+/* — ELEMENTO: Texto genérico (director, actores) — */
+.detail__text {
+    font-size: var(--text-sm);
+    color: var(--color-text-secondary);
+    line-height: 1.6;
+}
+
+
+/* ============================================================
+15. BLOQUE: BTN (Botones genéricos)
+============================================================ */
+
+.btn {
+    display: inline-flex;
+    align-items: center;
+    gap: var(--space-2);
+    height: 44px;
+    padding: 0 var(--space-6);
+    border-radius: var(--radius-full);
+    font-family: var(--font-display);
+    font-size: var(--text-sm);
+    font-weight: 600;
+    transition: all var(--transition-fast);
+}
+
+/* — MODIFICADOR: Secundario — */
+.btn--secondary {
+    background: var(--color-surface-2);
+    border: 1px solid var(--color-border);
+    color: var(--color-text-secondary);
+}
+
+.btn--secondary:hover {
+    background: var(--color-accent-dim);
+    border-color: var(--color-accent);
+    color: var(--color-accent);
+}
+
+
+/* ============================================================
+16. BLOQUE: FOOTER
+============================================================ */
+
+.footer {
+    padding: var(--space-6) var(--content-padding);
+    border-top: 1px solid var(--color-border);
+    text-align: center;
+}
+
+.footer__text {
+    font-size: var(--text-xs);
+    color: var(--color-text-muted);
+}
+
+.footer__link {
+    color: var(--color-accent);
+    transition: color var(--transition-fast);
+}
+
+.footer__link:hover {
+    color: var(--color-text-primary);
+}
+
+
+/* ============================================================
+17. ANIMACIONES DE ENTRADA
+Clase .fade-in-up que JS puede aplicar a las cards
+al renderizarlas para un efecto escalonado
+============================================================ */
+
+@keyframes fadeInUp {
+    from {
+        opacity: 0;
+        transform: translateY(20px);
+    }
+
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+.fade-in-up {
+    animation: fadeInUp var(--transition-normal) ease both;
+}
+
+/* Delays escalonados para las cards del grid */
+.fade-in-up:nth-child(1) {
+    animation-delay: 0ms;
+}
+
+.fade-in-up:nth-child(2) {
+    animation-delay: 60ms;
+}
+
+.fade-in-up:nth-child(3) {
+    animation-delay: 120ms;
+}
+
+.fade-in-up:nth-child(4) {
+    animation-delay: 180ms;
+}
+
+.fade-in-up:nth-child(5) {
+    animation-delay: 240ms;
+}
+
+.fade-in-up:nth-child(6) {
+    animation-delay: 300ms;
+}
+
+.fade-in-up:nth-child(7) {
+    animation-delay: 360ms;
+}
+
+.fade-in-up:nth-child(8) {
+    animation-delay: 420ms;
+}
+
+.fade-in-up:nth-child(9) {
+    animation-delay: 480ms;
+}
+
+.fade-in-up:nth-child(10) {
+    animation-delay: 540ms;
+}
+
+
+/* ============================================================
+18. AJUSTES RESPONSIVOS ADICIONALES
+============================================================ */
+
+/* En móviles muy pequeños, oculta el texto del botón "Buscar"
+     y deja solo el icono para ahorrar espacio en el header */
+@media (max-width: 400px) {
+    .search__btn {
+        padding: 0 var(--space-4);
+        font-size: 0;
+        /* Oculta texto */
+        width: 44px;
+        justify-content: center;
+    }
+
+    /* Muestra un icono en su lugar con CSS content */
+    .search__btn::after {
+        content: '🔍';
+        font-size: var(--text-base);
+    }
+
+    .header__brand-name {
+        font-size: var(--text-base);
+    }
+}
+
+/* Desktop grande: aumenta padding lateral */
+@media (min-width: 1280px) {
+    :root {
+        --content-padding: var(--space-8);
+    }
+}

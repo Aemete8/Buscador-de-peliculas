@@ -1,0 +1,520 @@
+<!doctype html>
+<html lang="es">
+    <head>
+        <meta charset="UTF-8" />
+        <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+        <meta
+            name="description"
+            content="CineSearch — Busca películas, explora detalles, descubre el cine."
+        />
+        <meta name="theme-color" content="#0A0A0F" />
+        <title>CineSearch</title>
+
+        <!-- ====================================================
+        FUENTES: Outfit (títulos/UI) + Inter (cuerpo/datos)
+        Cargadas desde Google Fonts con display=swap para
+        evitar FOUT (Flash of Unstyled Text)
+        ==================================================== -->
+        <link rel="preconnect" href="https://fonts.googleapis.com" />
+        <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+        <link
+            href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=Outfit:wght@400;600;700;800&display=swap"
+            rel="stylesheet"
+        />
+
+        <link rel="stylesheet" href="./css/styles.css" />
+    </head>
+
+    <body>
+        <!-- ====================================================
+        HEADER — barra superior con logo + barra de búsqueda
+        role="banner" es el landmark semántico del header
+        ==================================================== -->
+        <header class="header" role="banner">
+            <div class="header__inner">
+                <!-- Identidad de la app -->
+                <a
+                    href="#"
+                    class="header__brand"
+                    aria-label="CineSearch — Ir al inicio"
+                >
+                    <!-- Icono de cámara SVG inline (no depende de fuentes externas) -->
+                    <svg
+                        class="header__brand-icon"
+                        xmlns="http://www.w3.org/2000/svg"
+                        viewBox="0 0 24 24"
+                        fill="none"
+                        stroke="currentColor"
+                        stroke-width="2"
+                        stroke-linecap="round"
+                        stroke-linejoin="round"
+                        aria-hidden="true"
+                        focusable="false"
+                    >
+                        <path
+                            d="M15 10l4.553-2.069A1 1 0 0121 8.82v6.36a1 1 0 01-1.447.894L15 14M3 8a2 2 0 012-2h10a2 2 0 012 2v8a2 2 0 01-2 2H5a2 2 0 01-2-2V8z"
+                        />
+                    </svg>
+                    <span class="header__brand-name"
+                        >Cine<span class="header__brand-accent"
+                            >Search</span
+                        ></span
+                    >
+                </a>
+
+                <!-- Formulario de búsqueda principal
+                role="search" identifica este landmark para screen readers -->
+                <div class="search" role="search">
+                    <div class="search__wrapper">
+                        <!-- Input con lista de sugerencias (historial) vinculada via aria -->
+                        <label for="search-input" class="sr-only"
+                            >Buscar películas</label
+                        >
+                        <input
+                            id="search-input"
+                            class="search__input"
+                            type="search"
+                            placeholder="Buscar película..."
+                            autocomplete="off"
+                            aria-label="Buscar películas"
+                            aria-autocomplete="list"
+                            aria-controls="search-suggestions"
+                            aria-expanded="false"
+                        />
+
+                        <!-- Icono de lupa dentro del input (decorativo) -->
+                        <svg
+                            class="search__icon"
+                            xmlns="http://www.w3.org/2000/svg"
+                            viewBox="0 0 24 24"
+                            fill="none"
+                            stroke="currentColor"
+                            stroke-width="2"
+                            stroke-linecap="round"
+                            stroke-linejoin="round"
+                            aria-hidden="true"
+                            focusable="false"
+                        >
+                            <circle cx="11" cy="11" r="8" />
+                            <line x1="21" y1="21" x2="16.65" y2="16.65" />
+                        </svg>
+
+                        <!-- Dropdown de historial de búsquedas
+                        Oculto por defecto, visible cuando el input recibe foco
+                        y hay historial guardado en localStorage -->
+                        <ul
+                            id="search-suggestions"
+                            class="search__suggestions"
+                            role="listbox"
+                            aria-label="Búsquedas recientes"
+                            hidden
+                        >
+                            <!-- Los <li> se generan dinámicamente con JS -->
+                        </ul>
+                    </div>
+
+                    <!-- Botón de búsqueda explícito (accesible y usable en móvil) -->
+                    <button
+                        class="search__btn"
+                        type="button"
+                        aria-label="Buscar"
+                    >
+                        Buscar
+                    </button>
+                </div>
+            </div>
+        </header>
+
+        <!-- ====================================================
+        MAIN — contenido principal de la aplicación
+        Contiene tres "vistas" que se muestran/ocultan con JS:
+        1. #view-home     → estado inicial / bienvenida
+        2. #view-results  → grid de resultados
+        3. #view-detail   → detalle de una película
+        Solo una vista es visible a la vez
+    ==================================================== -->
+        <main class="main" id="main-content">
+            <!-- ————————————————————————————————————————————
+            VISTA 1: HOME — pantalla de bienvenida
+            Visible al cargar la app por primera vez
+            ———————————————————————————————————————————— -->
+            <section
+                id="view-home"
+                class="view view--home"
+                aria-label="Pantalla de inicio"
+            >
+                <div class="hero">
+                    <!-- Icono grande decorativo -->
+                    <div class="hero__icon" aria-hidden="true">🎬</div>
+                    <h1 class="hero__title">Descubre el cine</h1>
+                    <p class="hero__subtitle">
+                        Busca cualquier película, serie o cortometraje.<br />
+                        Millones de títulos, un solo lugar.
+                    </p>
+                    <!-- Chips de búsquedas sugeridas para onboarding rápido -->
+                    <div
+                        class="hero__suggestions"
+                        role="group"
+                        aria-label="Búsquedas sugeridas"
+                    >
+                        <span class="hero__label">Prueba con:</span>
+                        <button
+                            class="chip"
+                            type="button"
+                            data-query="Inception"
+                        >
+                            Inception
+                        </button>
+                        <button
+                            class="chip"
+                            type="button"
+                            data-query="The Dark Knight"
+                        >
+                            The Dark Knight
+                        </button>
+                        <button
+                            class="chip"
+                            type="button"
+                            data-query="Interstellar"
+                        >
+                            Interstellar
+                        </button>
+                        <button
+                            class="chip"
+                            type="button"
+                            data-query="Parasite"
+                        >
+                            Parasite
+                        </button>
+                    </div>
+                </div>
+            </section>
+
+            <!-- ————————————————————————————————————————————
+            VISTA 2: RESULTS — grid de resultados
+            Contiene: estado de carga, estado de error,
+            grid de cards y controles de paginación
+            ———————————————————————————————————————————— -->
+            <section
+                id="view-results"
+                class="view view--results"
+                aria-label="Resultados de búsqueda"
+                hidden
+            >
+                <!-- Cabecera de resultados: término buscado + total -->
+                <div class="results-header">
+                    <p class="results-header__info">
+                        Resultados para
+                        <strong
+                            id="results-query"
+                            class="results-header__query"
+                        ></strong>
+                        <span
+                            id="results-count"
+                            class="results-header__count"
+                        ></span>
+                    </p>
+                </div>
+
+                <!-- Estado: cargando
+                aria-live="polite" anuncia el cambio a screen readers -->
+                <div
+                    id="state-loading"
+                    class="state state--loading"
+                    role="status"
+                    aria-live="polite"
+                    hidden
+                >
+                    <!-- Tres puntos animados con CSS -->
+                    <div class="loader" aria-label="Cargando resultados...">
+                        <span class="loader__dot"></span>
+                        <span class="loader__dot"></span>
+                        <span class="loader__dot"></span>
+                    </div>
+                    <p class="state__text">Buscando películas...</p>
+                </div>
+
+                <!-- Estado: error -->
+                <div
+                    id="state-error"
+                    class="state state--error"
+                    role="alert"
+                    aria-live="assertive"
+                    hidden
+                >
+                    <div class="state__icon" aria-hidden="true">⚠️</div>
+                    <p id="error-message" class="state__text"></p>
+                    <button
+                        class="btn btn--secondary"
+                        id="error-retry-btn"
+                        type="button"
+                    >
+                        Intentar de nuevo
+                    </button>
+                </div>
+
+                <!-- Grid de movie cards
+                role="list" en <ul> semántico para screen readers -->
+                <ul
+                    id="movies-grid"
+                    class="movies-grid"
+                    role="list"
+                    aria-label="Películas encontradas"
+                >
+                    <!-- Las <li class="movie-card"> se generan dinámicamente con JS -->
+                </ul>
+
+                <!-- Controles de paginación
+                aria-label describe el bloque de navegación -->
+                <nav
+                    id="pagination"
+                    class="pagination"
+                    aria-label="Navegación de páginas"
+                    hidden
+                >
+                    <button
+                        id="btn-prev"
+                        class="pagination__btn pagination__btn--prev"
+                        type="button"
+                        aria-label="Página anterior"
+                        disabled
+                    >
+                        <svg
+                            xmlns="http://www.w3.org/2000/svg"
+                            viewBox="0 0 24 24"
+                            fill="none"
+                            stroke="currentColor"
+                            stroke-width="2.5"
+                            stroke-linecap="round"
+                            stroke-linejoin="round"
+                            aria-hidden="true"
+                            focusable="false"
+                        >
+                            <polyline points="15 18 9 12 15 6" />
+                        </svg>
+                        Anterior
+                    </button>
+
+                    <!-- Indicador de página actual / total -->
+                    <span class="pagination__info" aria-live="polite">
+                        Página <strong id="page-current">1</strong> de
+                        <strong id="page-total">1</strong>
+                    </span>
+
+                    <button
+                        id="btn-next"
+                        class="pagination__btn pagination__btn--next"
+                        type="button"
+                        aria-label="Página siguiente"
+                    >
+                        Siguiente
+                        <svg
+                            xmlns="http://www.w3.org/2000/svg"
+                            viewBox="0 0 24 24"
+                            fill="none"
+                            stroke="currentColor"
+                            stroke-width="2.5"
+                            stroke-linecap="round"
+                            stroke-linejoin="round"
+                            aria-hidden="true"
+                            focusable="false"
+                        >
+                            <polyline points="9 18 15 12 9 6" />
+                        </svg>
+                    </button>
+                </nav>
+            </section>
+
+            <!-- ————————————————————————————————————————————
+            VISTA 3: DETAIL — ficha completa de una película
+            Se superpone/reemplaza a la vista de resultados
+            ———————————————————————————————————————————— -->
+            <section
+                id="view-detail"
+                class="view view--detail"
+                aria-label="Detalle de película"
+                hidden
+            >
+                <!-- Botón volver (siempre accesible desde teclado) -->
+                <button
+                    id="btn-back"
+                    class="btn-back"
+                    type="button"
+                    aria-label="Volver a los resultados"
+                >
+                    <svg
+                        xmlns="http://www.w3.org/2000/svg"
+                        viewBox="0 0 24 24"
+                        fill="none"
+                        stroke="currentColor"
+                        stroke-width="2.5"
+                        stroke-linecap="round"
+                        stroke-linejoin="round"
+                        aria-hidden="true"
+                        focusable="false"
+                    >
+                        <polyline points="15 18 9 12 15 6" />
+                    </svg>
+                    Volver
+                </button>
+
+                <!-- Estado de carga del detalle -->
+                <div
+                    id="detail-loading"
+                    class="state state--loading"
+                    role="status"
+                    aria-live="polite"
+                    hidden
+                >
+                    <div class="loader" aria-label="Cargando detalle...">
+                        <span class="loader__dot"></span>
+                        <span class="loader__dot"></span>
+                        <span class="loader__dot"></span>
+                    </div>
+                    <p class="state__text">Cargando información...</p>
+                </div>
+
+                <!-- Estado de error del detalle -->
+                <div
+                    id="detail-error"
+                    class="state state--error"
+                    role="alert"
+                    hidden
+                >
+                    <div class="state__icon" aria-hidden="true">⚠️</div>
+                    <p id="detail-error-message" class="state__text"></p>
+                </div>
+
+                <!-- Contenido del detalle — llenado por JS -->
+                <article id="detail-content" class="detail" hidden>
+                    <!-- Imagen de fondo desenfocada (póster grande como backdrop) -->
+                    <div
+                        class="detail__backdrop"
+                        id="detail-backdrop"
+                        aria-hidden="true"
+                    ></div>
+
+                    <div class="detail__inner">
+                        <!-- Columna izquierda: póster -->
+                        <div class="detail__poster-col">
+                            <img
+                                id="detail-poster"
+                                class="detail__poster"
+                                src=""
+                                alt=""
+                                loading="lazy"
+                            />
+                        </div>
+
+                        <!-- Columna derecha: información -->
+                        <div class="detail__info-col">
+                            <!-- Géneros como chips -->
+                            <div
+                                id="detail-genres"
+                                class="detail__genres"
+                                role="list"
+                                aria-label="Géneros"
+                            ></div>
+
+                            <!-- Título y año -->
+                            <h2 id="detail-title" class="detail__title"></h2>
+
+                            <!-- Metadatos en línea: año · duración · calificación -->
+                            <div
+                                class="detail__meta"
+                                role="list"
+                                aria-label="Datos de la película"
+                            >
+                                <span
+                                    id="detail-year"
+                                    class="detail__meta-item"
+                                    role="listitem"
+                                ></span>
+                                <span
+                                    class="detail__meta-sep"
+                                    aria-hidden="true"
+                                    >·</span
+                                >
+                                <span
+                                    id="detail-runtime"
+                                    class="detail__meta-item"
+                                    role="listitem"
+                                ></span>
+                                <span
+                                    class="detail__meta-sep"
+                                    aria-hidden="true"
+                                    >·</span
+                                >
+                                <!-- Calificación IMDb con estrella dorada -->
+                                <span
+                                    id="detail-rating"
+                                    class="detail__meta-item detail__meta-item--rating"
+                                    role="listitem"
+                                >
+                                    <svg
+                                        class="detail__star"
+                                        xmlns="http://www.w3.org/2000/svg"
+                                        viewBox="0 0 24 24"
+                                        fill="currentColor"
+                                        aria-hidden="true"
+                                    >
+                                        <polygon
+                                            points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"
+                                        />
+                                    </svg>
+                                    <strong id="detail-rating-value"></strong>
+                                    <small id="detail-votes"></small>
+                                </span>
+                            </div>
+
+                            <!-- Sinopsis -->
+                            <div class="detail__section">
+                                <h3 class="detail__section-title">Sinopsis</h3>
+                                <p id="detail-plot" class="detail__plot"></p>
+                            </div>
+
+                            <!-- Director y actores -->
+                            <div class="detail__section">
+                                <h3 class="detail__section-title">Dirección</h3>
+                                <p
+                                    id="detail-director"
+                                    class="detail__text"
+                                ></p>
+                            </div>
+
+                            <div class="detail__section">
+                                <h3 class="detail__section-title">Reparto</h3>
+                                <p id="detail-actors" class="detail__text"></p>
+                            </div>
+                        </div>
+                        <!-- /detail__info-col -->
+                    </div>
+                    <!-- /detail__inner -->
+                </article>
+            </section>
+        </main>
+
+        <!-- ====================================================
+        FOOTER — información secundaria de la app
+        ==================================================== -->
+        <footer class="footer" role="contentinfo">
+            <p class="footer__text">
+                Datos proporcionados por
+                <a
+                    class="footer__link"
+                    href="https://www.omdbapi.com/"
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    >OMDb API</a
+                >
+                · Hecho con ♥ para portafolio
+            </p>
+        </footer>
+
+        <!-- ====================================================
+        SCRIPTS — cargados al final del body para no
+        bloquear el renderizado del HTML/CSS
+        ==================================================== -->
+        <script src="./js/app.js"></script>
+    </body>
+</html>

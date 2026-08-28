@@ -1,0 +1,128 @@
+# ============================================================
+# CineSearch — .gitignore
+# ============================================================
+# Archivos y carpetas que Git NO debe rastrear ni subir.
+# Regla de oro: nunca subas secretos, dependencias
+# generadas automáticamente, ni archivos de tu entorno local.
+# ============================================================
+
+
+# ------------------------------------------------------------
+# SEGURIDAD — Lo más importante
+# Si alguna vez mueves la API key a un archivo .env,
+# asegúrate de que esté aquí antes de hacer commit.
+# ------------------------------------------------------------
+.env
+.env.local
+.env.*.local
+*.env
+
+# Archivo de configuración local (por si lo creas)
+config.local.js
+secrets.js
+
+
+# ------------------------------------------------------------
+# SISTEMAS OPERATIVOS
+# Archivos que el SO crea automáticamente y no pertenecen
+# al proyecto.
+# ------------------------------------------------------------
+
+# macOS
+.DS_Store
+.DS_Store?
+._*
+.Spotlight-V100
+.Trashes
+Icon?
+
+# Windows
+Thumbs.db
+Thumbs.db:encryptable
+ehthumbs.db
+Desktop.ini
+$RECYCLE.BIN/
+
+# Linux
+*~
+
+
+# ------------------------------------------------------------
+# EDITORES E IDEs
+# Configuración local de tu editor — otro desarrollador
+# puede usar un editor distinto, no compartas la tuya.
+# ------------------------------------------------------------
+
+# Visual Studio Code
+.vscode/
+!.vscode/extensions.json   # Excepción: lista de extensiones recomendadas
+                            # (puedes compartir esta si quieres)
+
+# JetBrains (WebStorm, IntelliJ...)
+.idea/
+*.iml
+*.iws
+
+# Vim / Neovim
+*.swp
+*.swo
+Session.vim
+
+# Emacs
+*~
+\#*\#
+/.emacs.desktop
+/.emacs.desktop.lock
+
+
+# ------------------------------------------------------------
+# NODE / NPM
+# Si en algún momento agregas dependencias (bundler,
+# linter, etc.), node_modules nunca va al repositorio.
+# Pesa cientos de MB y se regenera con `npm install`.
+# ------------------------------------------------------------
+node_modules/
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+package-lock.json   # Opcional: algunos equipos sí lo suben.
+                    # Para proyectos en solitario, puedes
+                    # ignorarlo para evitar conflictos.
+yarn.lock
+
+
+# ------------------------------------------------------------
+# BUILDS Y DISTRIBUCIÓN
+# Archivos generados por herramientas de build.
+# Se regeneran con el comando de build — no pertenecen al repo.
+# ------------------------------------------------------------
+dist/
+build/
+out/
+.cache/
+.parcel-cache/
+.vite/
+
+
+# ------------------------------------------------------------
+# LOGS Y REPORTES
+# ------------------------------------------------------------
+logs/
+*.log
+coverage/
+*.lcov
+.nyc_output/
+
+
+# ------------------------------------------------------------
+# MISCELÁNEOS
+# ------------------------------------------------------------
+# Archivos de notas personales que no son parte del proyecto
+TODO.local.md
+NOTAS.md
+
+# Backups de editores
+*.bak
+*.orig
+*.tmp
