@@ -1,413 +1,270 @@
-# 📐 Guía de Desarrollo — CineSearch
+# Guía de desarrollo · app.js
 
-> Flujo completo de la aplicación, arquitectura de decisiones  
-> y mapa visual de cómo se conectan todas las piezas.
-
----
-
-## Índice
-
-1. [Arquitectura general](#1-arquitectura-general)
-2. [El sistema de vistas](#2-el-sistema-de-vistas)
-3. [Flujo completo del usuario](#3-flujo-completo-del-usuario)
-4. [Flujo de datos: búsqueda](#4-flujo-de-datos-búsqueda)
-5. [Flujo de datos: detalle](#5-flujo-de-datos-detalle)
-6. [El objeto de estado](#6-el-objeto-de-estado)
-7. [localStorage y el historial](#7-localstorage-y-el-historial)
-8. [La API de OMDb](#8-la-api-de-omdb)
-9. [Árbol de componentes HTML](#9-árbol-de-componentes-html)
-10. [Mapa de event listeners](#10-mapa-de-event-listeners)
-11. [Casos borde a manejar](#11-casos-borde-a-manejar)
-12. [Orden de implementación recomendado](#12-orden-de-implementación-recomendado)
+> Esta guía **no te da el código**. Te da el mapa.  
+> Cada sección te dice **qué construir**, **por qué** existe esa pieza,  
+> y **qué preguntas hacerte** antes de escribir.
 
 ---
 
-## 1. Arquitectura general
-
-CineSearch es una **SPA (Single Page Application)** sin router ni framework. Todo el HTML existe desde el inicio — JavaScript controla qué sección es visible en cada momento.
+## Flujo completo de la app
 
 ```
-┌─────────────────────────────────────────────────────────┐
-│                        index.html                       │
-│                                                         │
-│  ┌──────────────────────────────────────────────────┐   │
-│  │  <header>  Logo + Barra de búsqueda + Historial  │   │
-│  └──────────────────────────────────────────────────┘   │
-│                                                         │
-│  ┌──────────────────────────────────────────────────┐   │
-│  │  <main>                                          │   │
-│  │                                                  │   │
-│  │  ┌────────────┐  ┌────────────┐  ┌────────────┐  │   │
-│  │  │ #view-home │  │#view-result│  │#view-detail│  │   │
-│  │  │  (visible) │  │  (hidden)  │  │  (hidden)  │  │   │
-│  │  └────────────┘  └────────────┘  └────────────┘  │   │
-│  │        ↑               ↑               ↑          │   │
-│  │        └───────────────┴───────────────┘          │   │
-│  │           Solo una visible a la vez               │   │
-│  └──────────────────────────────────────────────────┘   │
-│                                                         │
-│  ┌──────────────────────────────────────────────────┐   │
-│  │  <footer>  Créditos OMDb                         │   │
-│  └──────────────────────────────────────────────────┘   │
-└─────────────────────────────────────────────────────────┘
-```
-
-**Archivos y responsabilidades:**
-
-```
-index.html   →  Estructura y semántica. No tiene lógica.
-styles.css   →  Presentación. No tiene lógica.
-app.js       →  Toda la lógica. Lee el DOM, hace fetch, actualiza UI.
-```
-
----
-
-## 2. El sistema de vistas
-
-Hay exactamente **tres vistas**. El atributo HTML `hidden` las alterna:
-
-```
-Vista activa:   hidden = false  →  display: block  (visible)
-Vista inactiva: hidden = true   →  display: none   (invisible)
-```
-
-```
-                    ┌─────────────┐
-         INICIO     │  view-home  │
-                    │             │
-                    │  🎬 Hero    │
-                    │  Chips      │
-                    └──────┬──────┘
-                           │  Usuario busca
-                           ▼
-                    ┌─────────────────────┐
-         BÚSQUEDA   │   view-results      │
-                    │                     │
-                    │  ┌──────────────┐   │
-                    │  │state-loading │   │  ← mientras fetch carga
-                    │  └──────────────┘   │
-                    │  ┌──────────────┐   │
-                    │  │ state-error  │   │  ← si la API falla
-                    │  └──────────────┘   │
-                    │  ┌──────────────┐   │
-                    │  │ movies-grid  │   │  ← si hay resultados
-                    │  └──────────────┘   │
-                    │  ┌──────────────┐   │
-                    │  │  pagination  │   │  ← si hay > 10 resultados
-                    │  └──────────────┘   │
-                    └──────────┬──────────┘
-                               │  Usuario hace clic en una card
-                               ▼
-                    ┌─────────────────────┐
-         DETALLE    │   view-detail       │
-                    │                     │
-                    │  ┌──────────────┐   │
-                    │  │detail-loading│   │  ← mientras fetch carga
-                    │  └──────────────┘   │
-                    │  ┌──────────────┐   │
-                    │  │ detail-error │   │  ← si el fetch falla
-                    │  └──────────────┘   │
-                    │  ┌──────────────┐   │
-                    │  │detail-content│   │  ← si hay datos
-                    │  └──────────────┘   │
-                    └──────────┬──────────┘
-                               │  Usuario hace clic en "Volver"
-                               ▼
-                    ┌─────────────────────┐
-                    │   view-results      │  ← mismos resultados,
-                    │   (sin nuevo fetch) │    sin nuevo fetch
-                    └─────────────────────┘
-```
-
-**Regla importante:** Dentro de `view-results` hay sub-estados. En cada momento, exactamente uno de estos tres debe estar visible:
-
-```
-view-results contiene:
-  ├── state-loading   (animación de carga)
-  ├── state-error     (mensaje de error)
-  └── movies-grid     (las cards)
+Usuario abre la app
+        │
+        ▼
+  showViewHome()
+  (pantalla de bienvenida)
+        │
+        ▼
+  Usuario escribe título + Enter/btn
+        │
+        ▼
+  ¿Input vacío?
+        │
+   ┌────┴────┐
+  SÍ        NO
+   │         │
+   ▼         ▼
+ no hacer  searchMovies(query, page=1)
+  nada           │
+            ┌────┴────┐
+           OK        Error de red
+            │             │
+            ▼             ▼
+     ¿Response === "True"?   showError("Sin conexión")
+            │
+       ┌────┴────┐
+      SÍ        NO
+       │         │
+       ▼         ▼
+  renderMovies()  showError(data.Error)
+  updatePagination()
+  saveToHistory()
+  showGrid()
+       │
+       ▼
+  Usuario hace clic en una card
+       │
+       ▼
+  fetchMovieDetail(imdbID)
+       │
+  ┌────┴────┐
+ OK        Error
+  │             │
+  ▼             ▼
+renderDetail()  mostrar detail-error
+  │             (sin romper los resultados)
+  ▼
+Usuario hace clic en "Volver"
+  │
+  ▼
+showViewResults()
+(sin nuevo fetch — resultados ya en el DOM)
 ```
 
 ---
 
-## 3. Flujo completo del usuario
 
-### Camino feliz (todo sale bien)
 
-```
-1. Usuario abre la app
-   → showViewHome()
-   → Se ve el hero animado
+## Paso 1 — Configuración inicial
 
-2. Usuario escribe "Inception" en el input
-   → Puede hacer clic en "Buscar" o presionar Enter
 
-3. searchMovies("Inception", 1) se ejecuta
-   → showViewResults()
-   → showLoading()          ← aparece el loader
-   → fetch() a la API       ← petición de red
 
-4. La API responde con 10 películas
-   → renderMovies(data.Search)  ← se crean las cards
-   → updatePagination(1, 25)    ← "Página 1 de 3"
-   → saveToHistory("Inception") ← se guarda en localStorage
-   → showGrid()                 ← desaparece el loader
+### Qué hacer
 
-5. Usuario hace clic en "Inception (2010)"
-   → showViewDetail()
-   → fetchMovieDetail("tt1375666")
-   → detailLoading aparece
+Al inicio del archivo van tres bloques antes de cualquier función:
 
-6. La API responde con el detalle completo
-   → renderDetail(data)       ← se llena el artículo
-   → detailLoading desaparece
-   → detailContent aparece
+**1a. La API key y la URL base** — variables sueltas, bien comentadas  
+**1b. Las referencias al DOM** — todos los elementos que vas a tocar, guardados en constantes  
+**1c. El objeto de estado** — guarda la información que la app necesita recordar entre acciones
 
-7. Usuario hace clic en "Volver"
-   → showViewResults()
-   → Los resultados ya están en el DOM — no hay fetch
-```
+### Por qué importa
 
-### Camino de error (búsqueda sin resultados)
+Si esparces `document.getElementById(...)` por todo el archivo, cuando el HTML cambie tendrás que buscar en 20 lugares. Centralizar las referencias al inicio es mantenimiento fácil.
 
-```
-1. Usuario escribe "xkjhqwerty289" y busca
+El objeto de estado es la "fuente de verdad". En lugar de leer el DOM para saber qué búsqueda está activa o en qué página estás, lees el estado.
 
-2. searchMovies("xkjhqwerty289", 1)
-   → fetch() a la API
+### Qué debes tener al terminar este paso
 
-3. La API responde con { Response: "False", Error: "Movie not found!" }
-   → showError("Movie not found!")
-   → Aparece el estado de error con el mensaje
-   → NO se guarda en historial (búsqueda fallida)
-```
+```js
+const API_KEY = 'tu_key_aqui';
+const API_URL = 'https://www.omdbapi.com/';
 
-### Camino de error (sin conexión)
+// — Búsqueda —
+const searchInput   = document.getElementById('search-input');
+const searchBtn     = document.querySelector('.search__btn');
+const suggestionsEl = document.getElementById('search-suggestions');
 
-```
-1. Usuario busca con internet cortado
+// — Vistas —
+const viewHome    = document.getElementById('view-home');
+const viewResults = document.getElementById('view-results');
+const viewDetail  = document.getElementById('view-detail');
 
-2. fetch() lanza una excepción (TypeError: Failed to fetch)
-   → catch(error) captura la excepción
-   → showError("Sin conexión. Verifica tu internet.")
-```
+// — Estados dentro de view-results —
+const stateLoading  = document.getElementById('state-loading');
+const stateError    = document.getElementById('state-error');
+const errorMessage  = document.getElementById('error-message');
+const errorRetryBtn = document.getElementById('error-retry-btn');
 
----
+// — Grid —
+const moviesGrid  = document.getElementById('movies-grid');
+const resultsQuery = document.getElementById('results-query');
+const resultsCount = document.getElementById('results-count');
 
-## 4. Flujo de datos: búsqueda
+// — Paginación —
+const pagination  = document.getElementById('pagination');
+const btnPrev     = document.getElementById('btn-prev');
+const btnNext     = document.getElementById('btn-next');
+const pageCurrent = document.getElementById('page-current');
+const pageTotal   = document.getElementById('page-total');
 
-```
-Usuario escribe "Batman" y presiona Enter
-            │
-            ▼
-    searchMovies("Batman", 1)
-            │
-            ├─ ¿Input vacío?
-            │   └─ SÍ → return (no hace nada)
-            │   └─ NO → continúa
-            │
-            ├─ Actualiza estado:
-            │   state.currentQuery = "Batman"
-            │   state.currentPage  = 1
-            │   state.isLoading    = true
-            │
-            ├─ showViewResults()
-            ├─ showLoading()
-            │
-            ▼
-    fetch("https://www.omdbapi.com/?s=Batman&page=1&apikey=...")
-            │
-            ├─ ¿Error de red? (catch)
-            │   └─ showError("Sin conexión. Verifica tu internet.")
-            │
-            ▼
-    data = await response.json()
-            │
-            ├─ data.Response === "False"?
-            │   └─ showError(data.Error)
-            │   └─ return
-            │
-            ├─ data.Response === "True"
-            │   ├─ state.currentMovies  = data.Search
-            │   ├─ state.totalResults   = Number(data.totalResults)
-            │   ├─ state.isLoading      = false
-            │   │
-            │   ├─ renderMovies(data.Search)
-            │   ├─ updatePagination(1, state.totalResults)
-            │   ├─ saveToHistory("Batman")
-            │   └─ showGrid()
-            │
-            ▼
-    Usuario ve 10 cards de películas de Batman
-```
+// — Detalle —
+const btnBack           = document.getElementById('btn-back');
+const detailLoading     = document.getElementById('detail-loading');
+const detailError       = document.getElementById('detail-error');
+const detailContent     = document.getElementById('detail-content');
+const detailBackdrop    = document.getElementById('detail-backdrop');
+const detailPoster      = document.getElementById('detail-poster');
+const detailGenres      = document.getElementById('detail-genres');
+const detailTitle       = document.getElementById('detail-title');
+const detailYear        = document.getElementById('detail-year');
+const detailRuntime     = document.getElementById('detail-runtime');
+const detailRatingValue = document.getElementById('detail-rating-value');
+const detailVotes       = document.getElementById('detail-votes');
+const detailPlot        = document.getElementById('detail-plot');
+const detailDirector    = document.getElementById('detail-director');
+const detailActors      = document.getElementById('detail-actors');
 
----
-
-## 5. Flujo de datos: detalle
-
-```
-Usuario hace clic en la card "Batman Begins"
-            │
-            ▼
-    fetchMovieDetail("tt0372784")
-            │
-            ├─ showViewDetail()
-            ├─ detailLoading.hidden = false
-            ├─ detailContent.hidden = true
-            │
-            ▼
-    fetch("https://www.omdbapi.com/?i=tt0372784&apikey=...")
-            │
-            ├─ ¿Error de red? (catch)
-            │   ├─ detailLoading.hidden = true
-            │   ├─ detailError.hidden   = false
-            │   └─ detailErrorMsg.textContent = "No se pudo cargar..."
-            │
-            ▼
-    data = await response.json()
-            │
-            ├─ data.Response === "False"?
-            │   └─ muestra detailError
-            │
-            ├─ data.Response === "True"
-            │   └─ renderDetail(data)
-            │          │
-            │          ├─ Llena backdrop con el póster
-            │          ├─ Llena título, año, runtime
-            │          ├─ Crea chips de géneros
-            │          ├─ Llena rating y votos
-            │          ├─ Llena sinopsis
-            │          ├─ Llena director y actores
-            │          ├─ detailLoading.hidden = true
-            │          └─ detailContent.hidden = false
-            │
-            ▼
-    Usuario ve la ficha completa de la película
-```
-
----
-
-## 6. El objeto de estado
-
-El estado centraliza toda la información que la app necesita recordar:
-
-```javascript
 const state = {
-  currentQuery:   '',    // "Batman"
-  currentPage:    1,     // 2
-  totalResults:   0,     // 47
-  currentMovies:  [],    // [{Title, Year, imdbID, Poster}, ...]
-  isLoading:      false, // true mientras hay un fetch activo
+  currentQuery:  '',    // texto de la última búsqueda exitosa
+  currentPage:   1,     // página activa en el grid
+  totalResults:  0,     // total de películas que devolvió la API
+  currentMovies: [],    // array de películas de la página actual
+  isLoading:     false, // ¿hay una petición en curso?
 };
 ```
 
-**¿Por qué un objeto de estado y no variables sueltas?**
-
-```javascript
-// ❌ Mal — variables sueltas, difícil de depurar
-let query = '';
-let page = 1;
-let total = 0;
-
-// ✅ Bien — un solo lugar para mirar en el debugger
-const state = { currentQuery: '', currentPage: 1, totalResults: 0 };
-// En DevTools puedes escribir: console.log(state) y ver todo de un vistazo
-```
-
-**Diagrama de quién lee y quién escribe el estado:**
-
-```
-ESCRIBE estado:          LEE estado:
-searchMovies()           updatePagination()  → lee totalResults, currentPage
-renderMovies()           btnPrev listener    → lee currentPage
-fetchMovieDetail()       btnNext listener    → lee currentPage
-                         errorRetryBtn       → lee currentQuery
-```
+> 💡 **Pregunta clave antes de escribir:** ¿Por qué guardar `currentMovies` en el estado en lugar de solo dejarlo en el DOM? Piénsalo: cuando el usuario abre el detalle y luego vuelve, ¿cómo evitas hacer un nuevo fetch?
 
 ---
 
-## 7. localStorage y el historial
+
+
+## Paso 2 — Las funciones de vista
+
+
+
+### Qué hacer
+
+Un conjunto de funciones que controlan qué "pantalla" ve el usuario y qué sub-estado se muestra dentro de la vista de resultados.
+
+La app tiene **tres vistas** (solo una visible a la vez) y **tres sub-estados** dentro de view-results (solo uno visible a la vez):
 
 ```
-┌─────────────────────────────────────────────────┐
-│  localStorage["cinesearch_history"]             │
-│                                                 │
-│  '["Inception","Batman","Parasite","Dune","Her"]'│
-│       ↑ más reciente                  más vieja ↑│
-└─────────────────────────────────────────────────┘
+Vistas:        showViewHome()
+               showViewResults()
+               showViewDetail()
+
+Sub-estados:   showLoading()   → muestra el loader, oculta grid y error
+               showError(msg)  → muestra el error, oculta grid y loader
+               showGrid()      → muestra el grid, oculta loader y error
 ```
 
-**Flujo del historial:**
 
-```
-Usuario busca "Arrival"
-        │
-        ▼
-getHistory()
-→ ["Inception", "Batman", "Parasite", "Dune", "Her"]
-        │
-        ▼
-Filtrar "Arrival" si ya existía (no duplicar)
-→ ["Inception", "Batman", "Parasite", "Dune", "Her"]
-        │
-        ▼
-Insertar al inicio
-→ ["Arrival", "Inception", "Batman", "Parasite", "Dune", "Her"]
-        │
-        ▼
-Cortar a 5 elementos
-→ ["Arrival", "Inception", "Batman", "Parasite", "Dune"]
-        │
-        ▼
-localStorage.setItem("cinesearch_history", JSON.stringify([...]))
+
+### Por qué importa
+
+Esta es la pieza más importante de la app. Si no centralizas la visibilidad, terminas con `.hidden = true` y `.hidden = false` esparcidos en 15 lugares y es muy fácil que un estado quede visible cuando no debería.
+
+### La mecánica
+
+El atributo HTML `hidden` oculta un elemento completamente (equivale a `display: none`). Manejarlo es simple:
+
+```js
+elemento.hidden = true;   // oculta
+elemento.hidden = false;  // muestra
 ```
 
-**Flujo del dropdown:**
+Cada función de vista debe:
 
-```
-Usuario hace clic en el input
-        │
-        ▼
-renderSuggestions()
-        │
-        ├─ getHistory() → []  →  suggestionsEl.hidden = true
-        │
-        └─ getHistory() → ["Arrival", ...]
-               │
-               ▼
-           Crea <li> por cada ítem
-           suggestionsEl.hidden = false
-           aria-expanded = "true"
-               │
-               ▼
-           Usuario hace clic en "Arrival"
-               │
-               ▼
-           searchInput.value = "Arrival"
-           hideSuggestions()
-           searchMovies("Arrival")
-```
+1. Ocultar **todas** las vistas
+2. Mostrar solo la que corresponde
+3. Hacer scroll al top
+
+> 💡 **Pregunta clave:** `showViewResults()` también debe ocultar `stateLoading` y `stateError` por defecto. ¿Por qué? Piensa en qué estado podrían estar esos elementos si el usuario busca, le da error, y luego busca de nuevo.
 
 ---
 
-## 8. La API de OMDb
 
-### Endpoint de búsqueda
+
+## Paso 3 — Funciones de utilidad
+
+
+
+### Qué hacer
+
+Tres funciones pequeñas de apoyo que hacen una sola cosa. Escríbelas antes de los fetch porque las vas a necesitar dentro de ellos.
+
+### `hasPoster(posterUrl)`
+
+OMDb devuelve el string `"N/A"` cuando no hay póster. Esta función detecta ese caso.
+
+```js
+// Retorna true si hay URL real, false si es "N/A" o está vacío
+function hasPoster(posterUrl) { ... }
+```
+
+
+
+### `calculateTotalPages(totalResults)`
+
+OMDb siempre devuelve 10 resultados por página. Necesitas saber cuántas páginas hay en total para la paginación.
+
+```js
+// Ejemplo: 23 resultados → 3 páginas (10, 10, 3)
+// Pista: Math.ceil() redondea hacia arriba
+function calculateTotalPages(totalResults) { ... }
+```
+
+
+
+### `formatVotes(votes)`
+
+La API devuelve votos como string con comas: `"1,543,210"`. Esta función lo convierte a `"1.5M votos"` o `"45.7K votos"`.
+
+```js
+// Si votes es "N/A" → retorna '' (string vacío)
+// Si es >= 1,000,000 → "X.XM votos"
+// Si es >= 1,000     → "X.XK votos"
+// Si no              → "X votos"
+// Pista: primero quita las comas con .replace(/,/g, ''), luego convierte con Number()
+function formatVotes(votes) { ... }
+```
+
+> 💡 **Pregunta clave:** ¿Por qué `hasPoster` es una función y no una comparación directa `poster !== "N/A"` cada vez que la necesitas? ¿Qué ventaja tiene si OMDb algún día cambia el string que devuelve?
+
+---
+
+
+
+## Paso 4 — `searchMovies(query, page)`
+
+
+
+### Qué hacer
+
+La función `async` principal. Recibe el texto buscado y el número de página, llama a la API de búsqueda y orquesta todo lo que pasa después.
+
+### El endpoint de búsqueda
 
 ```
-GET https://www.omdbapi.com/?s=batman&page=1&apikey=TU_KEY
+GET https://www.omdbapi.com/?s=batman&page=2&apikey=TU_KEY
 
 Respuesta exitosa:
 {
   "Search": [
-    {
-      "Title": "Batman Begins",
-      "Year": "2005",
-      "imdbID": "tt0372784",
-      "Type": "movie",
-      "Poster": "https://m.media-amazon.com/images/..."
-    },
-    ... (10 items)
+    { "Title": "Batman Begins", "Year": "2005", "imdbID": "tt0372784", "Poster": "https://..." },
+    ... (hasta 10 items)
   ],
   "totalResults": "47",
   "Response": "True"
@@ -420,7 +277,150 @@ Respuesta de error:
 }
 ```
 
-### Endpoint de detalle
+
+
+### Cómo construir la URL de forma segura
+
+```js
+// ❌ Concatenación manual — se rompe con caracteres especiales
+const url = API_URL + '?s=' + query + '&page=' + page + '&apikey=' + API_KEY;
+
+// ✅ URLSearchParams — maneja encoding automáticamente
+// "The Dark Knight" → "The+Dark+Knight"
+const params = new URLSearchParams({ s: query, page, apikey: API_KEY });
+const url = `${API_URL}?${params}`;
+```
+
+
+
+### El flujo dentro de la función
+
+```
+searchMovies(query, page)
+        │
+        ├─ ¿query.trim() está vacío? → return (no hacer nada)
+        │
+        ├─ Actualizar estado:
+        │   state.currentQuery = query
+        │   state.currentPage  = page
+        │
+        ├─ showViewResults()
+        ├─ showLoading()
+        │
+        ▼
+     fetch(url)
+        │
+        ├─ catch → showError("Sin conexión. Verifica tu internet.")
+        │
+        ▼
+     data = await response.json()
+        │
+        ├─ data.Response === "False"
+        │   └─ showError(data.Error)
+        │   └─ return
+        │
+        └─ data.Response === "True"
+               ├─ state.currentMovies = data.Search
+               ├─ state.totalResults  = Number(data.totalResults)
+               ├─ renderMovies(data.Search)
+               ├─ updatePagination(page, state.totalResults)
+               ├─ saveToHistory(query)
+               └─ showGrid()
+```
+
+
+
+### Errores que debes manejar
+
+
+| Situación                   | Lo que pasa               | Mensaje al usuario                    |
+| --------------------------- | ------------------------- | ------------------------------------- |
+| Película no encontrada      | `Response: "False"`       | El texto de `data.Error`              |
+| Input vacío o solo espacios | — (no se llama)           | No hacer fetch                        |
+| Sin conexión                | `fetch` lanza `TypeError` | "Sin conexión. Verifica tu internet." |
+
+
+> 💡 **Pregunta clave:** `fetch` no lanza un error cuando la API responde con `Response: "False"` — eso sigue siendo HTTP 200. ¿Dónde exactamente en el código detectas si la búsqueda falló o tuvo éxito?
+
+---
+
+
+
+## Paso 5 — `renderMovies(movies)`
+
+
+
+### Qué hacer
+
+Recibe el array `data.Search` y crea dinámicamente las cards en el grid del DOM.
+
+### Estructura de cada card
+
+```html
+<!-- El <li> lleva data-id para capturar el imdbID al hacer clic -->
+<li class="movie-card fade-in-up" data-id="tt0372784">
+
+  <!-- Si hay póster: -->
+  <img class="movie-card__poster" src="https://..." alt="Póster de Batman Begins" />
+
+  <!-- Si NO hay póster (poster === "N/A"): -->
+  <div class="movie-card__placeholder">
+    <span class="movie-card__placeholder-icon">🎬</span>
+    <span>Sin póster</span>
+  </div>
+
+  <!-- Siempre: el overlay con efecto cortina -->
+  <div class="movie-card__overlay">
+    <div class="movie-card__line"></div>
+    <h3 class="movie-card__title">Batman Begins</h3>
+    <p class="movie-card__year">2005</p>
+  </div>
+
+</li>
+```
+
+
+
+### Lo que debes hacer antes de insertar
+
+```js
+// Limpia el grid antes de cada render — si no, las cards se acumulan
+moviesGrid.innerHTML = '';
+
+// Actualiza la cabecera de resultados
+resultsQuery.textContent = state.currentQuery;
+resultsCount.textContent = `— ${state.totalResults} resultados`;
+```
+
+
+
+### La delegación de eventos en el grid
+
+En lugar de agregar un listener a cada card (se destruyen y recrean en cada búsqueda), agrega **un solo listener al contenedor**. El evento "burbujea" hasta el grid:
+
+```js
+moviesGrid.addEventListener('click', (event) => {
+  const card = event.target.closest('.movie-card');
+  if (!card) return; // clic en el fondo, no en una card
+  fetchMovieDetail(card.dataset.id);
+});
+```
+
+> 💡 **Pregunta clave:** ¿Por qué usar `event.target.closest('.movie-card')` en lugar de `event.target`? Piensa en qué elemento recibe el clic si el usuario hace clic exactamente sobre el texto del título.
+
+---
+
+
+
+## Paso 6 — `fetchMovieDetail(imdbID)`
+
+
+
+### Qué hacer
+
+La función `async` del segundo tipo de fetch. Recibe un IMDb ID, llama al endpoint de detalle y orquesta la vista de detalle.
+
+### El endpoint de detalle
 
 ```
 GET https://www.omdbapi.com/?i=tt0372784&apikey=TU_KEY
@@ -429,230 +429,402 @@ Respuesta:
 {
   "Title": "Batman Begins",
   "Year": "2005",
-  "Rated": "PG-13",
-  "Released": "15 Jun 2005",
   "Runtime": "140 min",
   "Genre": "Action, Adventure",
   "Director": "Christopher Nolan",
-  "Writer": "Bob Kane, David S. Goyer, Christopher Nolan",
   "Actors": "Christian Bale, Michael Caine, Ken Watanabe",
   "Plot": "After witnessing his parents' murder...",
-  "Poster": "https://m.media-amazon.com/images/...",
+  "Poster": "https://...",
   "imdbRating": "8.2",
   "imdbVotes": "1,543,210",
   "imdbID": "tt0372784",
-  "Type": "movie",
   "Response": "True"
 }
 ```
 
-### Construir la URL de forma segura
 
-```javascript
-// ❌ Concatenación manual — propenso a errores con caracteres especiales
-const url = API_URL + '?s=' + query + '&page=' + page + '&apikey=' + API_KEY;
 
-// ✅ URLSearchParams — maneja encoding automáticamente
-// (ej: "The Dark Knight" → "The+Dark+Knight")
-const params = new URLSearchParams({
-  s:      query,
-  page:   page,
-  apikey: API_KEY
+### Diferencia clave con el fetch de búsqueda
+
+
+|           | Búsqueda (`&s=`)              | Detalle (`&i=`)                                              |
+| --------- | ----------------------------- | ------------------------------------------------------------ |
+| Parámetro | `s=batman`                    | `i=tt0372784`                                                |
+| Devuelve  | Array de resultados parciales | Objeto con todos los campos                                  |
+| Campos    | Title, Year, imdbID, Poster   | Todo lo anterior + Runtime, Genre, Director, Plot, Rating... |
+
+
+
+
+### El flujo dentro de la función
+
+```
+fetchMovieDetail("tt0372784")
+        │
+        ├─ showViewDetail()
+        ├─ detailLoading.hidden = false
+        ├─ detailContent.hidden = true
+        ├─ detailError.hidden   = true
+        │
+        ▼
+     fetch(url con &i=)
+        │
+        ├─ catch → mostrar detailError, NO romper los resultados
+        │
+        ▼
+     data = await response.json()
+        │
+        ├─ data.Response === "False" → mostrar detailError
+        │
+        └─ data.Response === "True"  → renderDetail(data)
+```
+
+> 💡 **Pregunta clave:** Si el detalle falla, el usuario debe poder hacer clic en "Volver" y ver sus resultados intactos. ¿Por qué `showViewDetail()` antes del fetch garantiza eso aunque falle?
+
+---
+
+
+
+## Paso 7 — `renderDetail(movie)`
+
+
+
+### Qué hacer
+
+Recibe el objeto completo de la película y llena cada elemento de la vista de detalle.
+
+### Campos a completar y cómo
+
+```js
+// Backdrop (imagen desenfocada de fondo)
+detailBackdrop.style.backgroundImage = `url(${movie.Poster})`;
+
+// Póster
+detailPoster.src = hasPoster(movie.Poster) ? movie.Poster : ''; // o un placeholder
+detailPoster.alt = `Póster de ${movie.Title}`;
+
+// Géneros — vienen como "Action, Adventure, Sci-Fi"
+// Necesitas crear un chip por cada uno:
+// "Action, Adventure".split(', ') → ["Action", "Adventure"]
+
+// Título y año
+detailTitle.textContent = movie.Title;
+detailYear.textContent  = movie.Year;
+
+// Runtime, rating, votos, sinopsis, director, actores
+// Algunos pueden ser "N/A" — decide qué mostrar en ese caso
+```
+
+
+
+### Campos que pueden valer "N/A"
+
+
+| Campo        | Si es "N/A" muestra...   |
+| ------------ | ------------------------ |
+| `Runtime`    | "Duración desconocida"   |
+| `imdbRating` | "Sin calificación"       |
+| `imdbVotes`  | (ocultar el elemento)    |
+| `Plot`       | "Sinopsis no disponible" |
+| `Director`   | "Director desconocido"   |
+
+
+
+
+### Al terminar de llenar todo
+
+```js
+detailLoading.hidden = true;
+detailContent.hidden = false;
+```
+
+> 💡 **Pregunta clave:** Los géneros vienen como un string separado por comas. ¿Qué método de string usas para convertir `"Action, Adventure, Sci-Fi"` en el array `["Action", "Adventure", "Sci-Fi"]`?
+
+---
+
+
+
+## Paso 8 — `updatePagination(currentPage, totalResults)`
+
+
+
+### Qué hacer
+
+Calcula el total de páginas y actualiza los controles de paginación: el indicador de página actual, y el estado habilitado/deshabilitado de los botones.
+
+### La lógica
+
+```js
+const total = calculateTotalPages(totalResults);
+
+// Actualizar el indicador
+pageCurrent.textContent = currentPage;
+pageTotal.textContent   = total;
+
+// Deshabilitar botones según la página
+btnPrev.disabled = currentPage === 1;
+btnNext.disabled = currentPage === total;
+
+// Si solo hay una página, ocultar toda la paginación
+pagination.hidden = total <= 1;
+```
+
+
+
+### Cuándo se llama
+
+Siempre después de un fetch exitoso de búsqueda, dentro de `searchMovies()`.
+
+> 💡 **Pregunta clave:** OMDb empieza a paginar desde `page=1`, no desde `page=0`. ¿Qué valor inicial tiene `state.currentPage` en el objeto de estado? ¿Coincide?
+
+---
+
+
+
+## Paso 9 — `localStorage` (historial de búsquedas)
+
+
+
+### Qué hacer
+
+Dos funciones que persisten el historial de las últimas 5 búsquedas y una tercera que renderiza el dropdown.
+
+```js
+getHistory()           // devuelve el array guardado (o [] si no hay nada)
+saveToHistory(query)   // agrega al inicio, elimina duplicados, corta a 5
+renderSuggestions()    // crea los <li> y muestra/oculta el dropdown
+```
+
+
+
+### Cómo guardar correctamente
+
+```js
+// localStorage solo guarda strings — siempre usa JSON
+localStorage.setItem('cinesearch_history', JSON.stringify(array));
+JSON.parse(localStorage.getItem('cinesearch_history') || '[]');
+```
+
+
+
+### El flujo de `saveToHistory(query)`
+
+```
+getHistory()
+→ ["Inception", "Batman", "Parasite", "Dune", "Her"]
+
+Filtrar duplicados (por si "Batman" ya existía)
+→ Array.filter(item => item !== query)
+
+Insertar al inicio
+→ [query, ...filtered]
+
+Cortar a 5 elementos
+→ .slice(0, 5)
+
+Guardar
+→ localStorage.setItem(...)
+```
+
+
+
+### El dropdown de sugerencias
+
+Cada ítem es un `<li>` que al hacer clic debe:
+
+1. Escribir el texto en el input
+2. Llamar a `searchMovies()` con ese texto
+3. Cerrar el dropdown
+
+```js
+function hideSuggestions() {
+  suggestionsEl.hidden = true;
+  searchInput.setAttribute('aria-expanded', 'false');
+}
+```
+
+> 💡 **Pregunta clave:** `localStorage.getItem()` retorna `null` si la clave no existe todavía. ¿Qué pasa si intentas hacer `JSON.parse(null)`? ¿Cómo lo evitas?
+
+---
+
+
+
+## Paso 10 — Event listeners
+
+
+
+### Qué hacer
+
+Conectar todos los eventos con sus funciones. Se escriben al final, cuando ya tienes todas las funciones implementadas.
+
+### Mapa completo de eventos
+
+
+| Elemento        | Evento    | Acción                                                |
+| --------------- | --------- | ----------------------------------------------------- |
+| `searchBtn`     | `click`   | `searchMovies(input.value.trim())`                    |
+| `searchInput`   | `keydown` | Si `Enter` → `searchMovies(...)`                      |
+| `searchInput`   | `focus`   | `renderSuggestions()`                                 |
+| `document`      | `click`   | Si clic fuera del wrapper → `hideSuggestions()`       |
+| `moviesGrid`    | `click`   | Delegación → `fetchMovieDetail(card.dataset.id)`      |
+| `btnBack`       | `click`   | `showViewResults()` — sin nuevo fetch                 |
+| `btnPrev`       | `click`   | `searchMovies(query, currentPage - 1)`                |
+| `btnNext`       | `click`   | `searchMovies(query, currentPage + 1)`                |
+| `errorRetryBtn` | `click`   | `searchMovies(state.currentQuery, state.currentPage)` |
+| `.chip` (×4)    | `click`   | `searchMovies(chip.dataset.query)`                    |
+
+
+
+
+### Cómo detectar clic fuera del dropdown
+
+```js
+document.addEventListener('click', (event) => {
+  // .closest() sube por el árbol del DOM buscando el selector
+  // Si el clic fue dentro del wrapper, retorna el elemento
+  // Si fue fuera, retorna null
+  if (!event.target.closest('.search__wrapper')) {
+    hideSuggestions();
+  }
 });
-const url = `${API_URL}?${params}`;
 ```
 
-### Campos que pueden ser "N/A"
-
-La API devuelve el string `"N/A"` cuando un campo no tiene datos.  
-Siempre verifica antes de mostrar:
-
-```javascript
-// Campos que frecuentemente son "N/A":
-movie.Poster    // → usa hasPoster() para detectarlo
-movie.Runtime   // → "N/A" si no hay dato
-movie.Plot      // → "N/A" para títulos muy viejos
-movie.Director  // → "N/A" para algunos documentales
-movie.imdbRating // → "N/A" si tiene pocos votos
-```
+> 💡 **Pregunta clave:** ¿Por qué el listener de paginación lee `state.currentPage` en lugar de leer el texto de `pageCurrent.textContent`? ¿Qué tipo de dato devuelve `textContent`?
 
 ---
 
-## 9. Árbol de componentes HTML
 
-```
-<body>
-│
-├── <header class="header">
-│   └── <div class="header__inner">
-│       ├── <a class="header__brand">          ← Logo
-│       └── <div class="search">               ← Búsqueda
-│           ├── <div class="search__wrapper">
-│           │   ├── <input class="search__input">
-│           │   ├── <svg class="search__icon">
-│           │   └── <ul class="search__suggestions">
-│           │       └── <li class="search__suggestion-item"> × N
-│           └── <button class="search__btn">
-│
-├── <main class="main">
-│   │
-│   ├── <section id="view-home">              ← VISTA 1
-│   │   └── <div class="hero">
-│   │       ├── <h1 class="hero__title">
-│   │       ├── <p class="hero__subtitle">
-│   │       └── <div class="hero__suggestions">
-│   │           └── <button class="chip"> × 4
-│   │
-│   ├── <section id="view-results">           ← VISTA 2
-│   │   ├── <div class="results-header">
-│   │   ├── <div id="state-loading">          ← sub-estado
-│   │   │   └── <div class="loader">
-│   │   │       └── <span class="loader__dot"> × 3
-│   │   ├── <div id="state-error">            ← sub-estado
-│   │   ├── <ul id="movies-grid">             ← sub-estado
-│   │   │   └── <li class="movie-card"> × 10
-│   │   │       ├── <img class="movie-card__poster">
-│   │   │       └── <div class="movie-card__overlay">
-│   │   │           ├── <div class="movie-card__line">
-│   │   │           ├── <h3 class="movie-card__title">
-│   │   │           └── <p class="movie-card__year">
-│   │   └── <nav id="pagination">
-│   │       ├── <button id="btn-prev">
-│   │       ├── <span class="pagination__info">
-│   │       └── <button id="btn-next">
-│   │
-│   └── <section id="view-detail">            ← VISTA 3
-│       ├── <button id="btn-back">
-│       ├── <div id="detail-loading">
-│       ├── <div id="detail-error">
-│       └── <article id="detail-content">
-│           ├── <div class="detail__backdrop">
-│           └── <div class="detail__inner">
-│               ├── <div class="detail__poster-col">
-│               │   └── <img id="detail-poster">
-│               └── <div class="detail__info-col">
-│                   ├── <div id="detail-genres">
-│                   ├── <h2 id="detail-title">
-│                   ├── <div class="detail__meta">
-│                   ├── [sección sinopsis]
-│                   ├── [sección director]
-│                   └── [sección reparto]
-│
-└── <footer class="footer">
-```
 
----
+## Paso 11 — `init()`
 
-## 10. Mapa de event listeners
 
-```
-ELEMENTO                  EVENTO      FUNCIÓN LLAMADA
-─────────────────────────────────────────────────────────────────
-searchBtn                 click     → searchMovies(input.value.trim())
-searchInput               keydown   → if Enter → searchMovies(...)
-searchInput               focus     → renderSuggestions()
-document                  click     → if fuera del wrapper → hideSuggestions()
-btnPrev                   click     → searchMovies(query, currentPage - 1)
-btnNext                   click     → searchMovies(query, currentPage + 1)
-btnBack                   click     → showViewResults()
-errorRetryBtn             click     → searchMovies(currentQuery, currentPage)
-homeChips (×4)            click     → searchMovies(chip.dataset.query)
-moviesGrid (delegación)   click     → fetchMovieDetail(card.dataset.id)
-```
 
-> **Delegación de eventos en el grid:**  
-> En lugar de agregar un listener a cada card (que se destruyen y recrean en cada búsqueda), se agrega **un solo listener al contenedor** `#movies-grid`. Cuando el usuario hace clic, el evento "burbujea" hasta el grid y puedes usar `event.target.closest('.movie-card')` para identificar cuál card fue clickeada.
+### Qué hacer
 
-```javascript
-// ✅ Delegación — un solo listener, funciona con cards dinámicas
-moviesGrid.addEventListener('click', (event) => {
-  const card = event.target.closest('.movie-card');
-  if (!card) return; // clic en el fondo del grid, no en una card
-  const imdbID = card.dataset.id;
-  fetchMovieDetail(imdbID);
-});
-```
+La función de arranque. Se llama una sola vez al cargar la página y es el punto de entrada de toda la app.
 
----
-
-## 11. Casos borde a manejar
-
-| Situación | Qué hace la API | Qué debe hacer tu app |
-|-----------|-----------------|----------------------|
-| Búsqueda vacía `""` | — (no se llama) | Validar antes del fetch, no hacer nada |
-| Búsqueda solo espacios `"   "` | — (no se llama) | `query.trim()` antes de validar |
-| Película no encontrada | `Response: "False"` | Mostrar mensaje amigable del campo `Error` |
-| Sin conexión a internet | fetch lanza `TypeError` | catch → mostrar "Sin conexión" |
-| Película sin póster | `Poster: "N/A"` | Mostrar placeholder con emoji y texto |
-| Campo del detalle sin datos | `Runtime: "N/A"` | Mostrar texto alternativo o no mostrar |
-| Solo 1 página de resultados | `totalResults: "7"` | Ocultar la paginación (`hidden = true`) |
-| Error en el detalle | `Response: "False"` | Mostrar `detail-error` sin romper los resultados |
-| El usuario busca de nuevo | — | Limpiar el grid y hacer nuevo fetch |
-
----
-
-## 12. Orden de implementación recomendado
-
-Sigue este orden para tener siempre algo funcionando en el navegador:
-
-```
-FASE 1 — Ver algo en pantalla (1-2 horas)
-  1. Completa hasPoster() y calculateTotalPages()
-  2. Implementa showViewHome / Results / Detail
-  3. Implementa showLoading / showError / showGrid
-  4. Añade el listener del botón de búsqueda y Enter
-  5. En searchMovies(), por ahora solo haz console.log(data)
-  ✓ PRUEBA: busca algo y verifica la respuesta en la consola
-
-FASE 2 — Resultados en pantalla (1-2 horas)
-  6. Implementa renderMovies() con innerHTML
-  7. Agrega el listener de clic al grid (delegación)
-  8. En fetchMovieDetail(), por ahora solo console.log(data)
-  ✓ PRUEBA: se ven las cards, al hacer clic ves el JSON en consola
-
-FASE 3 — Vista de detalle (1-2 horas)
-  9. Implementa renderDetail() campo por campo
-  10. Implementa el botón Volver
-  ✓ PRUEBA: flujo completo home → results → detail → volver
-
-FASE 4 — Paginación (1 hora)
-  11. Implementa updatePagination()
-  12. Añade listeners de btnPrev y btnNext
-  ✓ PRUEBA: busca "batman", navega entre las páginas
-
-FASE 5 — Pulido y extras (2-3 horas)
-  13. Implementa getHistory / saveToHistory / renderSuggestions
-  14. Añade listeners de focus y click-fuera para el dropdown
-  15. Implementa formatVotes()
-  16. Conecta los chips de la pantalla home
-  17. Agrega el listener de error-retry
-
-  ✓ PRUEBA FINAL: flujo completo con historial, paginación,
-    errores y todos los casos borde
-```
-
----
-
-## Tips de debugging
-
-```javascript
-// Agrega esto al inicio de cada función mientras desarrollas
-function searchMovies(query, page) {
-  console.log('[searchMovies]', { query, page, state });
-  // ...
+```js
+function init() {
+  // 1. Registra todos los event listeners
+  // 2. Muestra la pantalla de inicio
+  showViewHome();
 }
 
-// Para inspeccionar el localStorage en DevTools:
-// Pestaña Application → Local Storage → tu dominio
+init();
+```
 
-// Para limpiar el historial manualmente en consola:
-localStorage.removeItem('cinesearch_history');
 
-// Para simular sin conexión:
-// DevTools → Network → Throttling → Offline
+
+### Por qué va al final
+
+Los event listeners deben registrarse después de que todas las funciones estén declaradas. Ponerlos en `init()` y llamar `init()` al final del archivo garantiza ese orden.
+
+> 💡 **Pregunta clave:** ¿Hay algo que debas leer o preparar en `init()` además de registrar listeners y mostrar la vista inicial? Piensa en el historial...
+
+---
+
+
+
+## Orden de desarrollo recomendado
+
+Desarrolla en este orden. Cada checkpoint es algo que puedes probar en el navegador.
+
+```
+[ ] 1. Config + DOM refs + estado (sin probar aún, es solo declaraciones)
+
+[ ] 2. showViewHome / Results / Detail + showLoading / Error / Grid
+        PRUEBA: llama estas funciones en la consola y verifica que las
+        vistas cambian visualmente
+
+[ ] 3. hasPoster() + calculateTotalPages() + formatVotes()
+        PRUEBA: prueba cada función en la consola con valores fijos
+
+[ ] 4. searchMovies() — por ahora solo console.log(data) al final
+        PRUEBA: busca "batman", verifica el objeto en la consola
+
+[ ] 5. renderMovies() + delegación de clic en el grid
+        PRUEBA: ya ves las cards, el clic en una card hace console.log(imdbID)
+
+[ ] 6. fetchMovieDetail() — por ahora solo console.log(data)
+        PRUEBA: el clic en una card muestra el objeto de detalle en consola
+
+[ ] 7. renderDetail()
+        PRUEBA: flujo completo home → results → detail → volver
+
+[ ] 8. updatePagination() + listeners de btnPrev / btnNext
+        PRUEBA: busca "batman" (47 resultados), navega entre páginas
+
+[ ] 9. getHistory() + saveToHistory() + renderSuggestions()
+        PRUEBA: busca 3 películas, haz clic en el input, ves el historial
+
+[ ] 10. Conectar todos los event listeners restantes (chips, retry, etc.)
+
+[ ] 11. Casos borde — prueba cada uno de la tabla de abajo
 ```
 
 ---
 
-*Última actualización: inicio del proyecto*  
-*Autor: en construcción 🚧*
+
+
+## Casos borde que debes probar antes de dar por terminado
+
+
+| Situación            | Cómo probarla                                       | Resultado esperado                     |
+| -------------------- | --------------------------------------------------- | -------------------------------------- |
+| Input vacío          | Haz clic en "Buscar" sin escribir nada              | No pasa nada                           |
+| Solo espacios        | Escribe `" "` y busca                               | No pasa nada                           |
+| Película inexistente | Busca `"xkjhqwerty289"`                             | Mensaje de error claro                 |
+| Sin internet         | DevTools → Network → Offline, luego busca           | Mensaje de "sin conexión"              |
+| Película sin póster  | Busca títulos muy viejos (ej: `"Nosferatu 1922"`)   | Se ve el placeholder visual            |
+| Solo 1 página        | Busca algo con pocos resultados (ej: `"Nosferatu"`) | La paginación se oculta                |
+| Error en detalle     | Manipula el imdbID en la consola con uno inválido   | Error en detalle sin romper el grid    |
+| Volver al grid       | Abre detalle → "Volver"                             | Los mismos resultados, sin nuevo fetch |
+
+
+---
+
+
+
+## Herramientas de desarrollo que te van a salvar
+
+**Para ver la respuesta completa de la API:**
+
+```js
+// Dentro de searchMovies() o fetchMovieDetail(), antes de renderizar:
+console.log(JSON.stringify(data, null, 2));
+```
+
+**Para simular una búsqueda fallida:**
+Escribe `"xkjhqwerty289"` — OMDb responde con `Response: "False"`.
+
+**Para ver y limpiar el localStorage:**
+DevTools → Application → Local Storage → localhost
+
+**Para testear funciones aisladas desde la consola:**
+
+```js
+// Prueba hasPoster con distintos valores:
+hasPoster("N/A")        // → false
+hasPoster("https://...") // → true
+
+// Prueba formatVotes:
+formatVotes("1,543,210") // → "1.5M votos"
+formatVotes("N/A")       // → ""
+```
+
+---
+
+
+
+## Errores comunes que vas a cometer (y está bien)
+
+1. **Olvidar** `await` en el fetch → obtienes una `Promise`, no los datos
+2. **Usar** `&i=` **en lugar de** `&s=` en la búsqueda → obtienes un objeto de una sola película, no un array
+3. **No hacer** `.trim()` al input → `"  "` pasa la validación como búsqueda válida
+4. **No limpiar el grid** antes de renderizar → las cards se acumulan sobre las anteriores
+5. **Leer** `pageCurrent.textContent` para la paginación → es un string, no un número; usa `state.currentPage`
+6. **No manejar el** `catch` del fetch → si el usuario no tiene internet, la app se rompe en silencio
+
+---
+
+*Cuando termines un paso y no sepas cómo seguir, muéstrame el código que escribiste y lo resolvemos juntos.*

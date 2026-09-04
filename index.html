@@ -34,9 +34,9 @@
             <div class="header__inner">
                 <!-- Identidad de la app -->
                 <a
-                    href="#"
                     class="header__brand"
                     aria-label="CineSearch — Ir al inicio"
+                    id="brand"
                 >
                     <!-- Icono de cámara SVG inline (no depende de fuentes externas) -->
                     <svg
@@ -116,6 +116,7 @@
                     <!-- Botón de búsqueda explícito (accesible y usable en móvil) -->
                     <button
                         class="search__btn"
+                        id="search-btn"
                         type="button"
                         aria-label="Buscar"
                     >
@@ -156,6 +157,7 @@
                         class="hero__suggestions"
                         role="group"
                         aria-label="Búsquedas sugeridas"
+                        id="hero-suggestions"
                     >
                         <span class="hero__label">Prueba con:</span>
                         <button
@@ -485,6 +487,11 @@
                             <div class="detail__section">
                                 <h3 class="detail__section-title">Reparto</h3>
                                 <p id="detail-actors" class="detail__text"></p>
+                            </div>
+
+                            <div class="detail__section">
+                                <h3 class="detail__section-title">Premios</h3>
+                                <p id="detail-awards" class="detail__text"></p>
                             </div>
                         </div>
                         <!-- /detail__info-col -->

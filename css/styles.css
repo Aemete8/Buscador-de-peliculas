@@ -282,6 +282,7 @@ Barra de navegación con glassmorphism, fija en la parte superior
 .header__inner {
     display: flex;
     align-items: center;
+    justify-content: space-between;
     gap: var(--space-4);
     height: 100%;
     max-width: var(--content-max-w);
@@ -297,6 +298,7 @@ Barra de navegación con glassmorphism, fija en la parte superior
     flex-shrink: 0;
     /* No se comprime cuando el espacio escasea */
     text-decoration: none;
+    cursor: pointer;
 }
 
 .header__brand-icon {
@@ -695,9 +697,13 @@ Columnas: 1 móvil → 2 tablet → 4 desktop
 .movies-grid {
     display: grid;
     /* Mobile: 1 columna que ocupa todo el ancho */
-    grid-template-columns: 1fr;
+    grid-template-columns:1fr 1fr;
     gap: var(--space-4);
     margin-bottom: var(--space-8);
+}
+
+.movies-grid[hidden] {
+    display: none;
 }
 
 /* Tablet: 2 columnas */
@@ -841,6 +847,7 @@ y sube al hacer hover. Cubre la mitad inferior del póster. */
     background: var(--color-surface-2);
     color: var(--color-text-muted);
     font-size: var(--text-sm);
+    border-radius: var(--radius-lg);
 }
 
 .movie-card__placeholder-icon {
@@ -972,12 +979,10 @@ Con imagen de fondo desenfocada como backdrop
 .detail__backdrop {
     position: absolute;
     inset: 0;
-    /* Equivale a top/right/bottom/left: 0 */
     background-size: cover;
     background-position: center;
-    filter: blur(40px) brightness(0.2) saturate(0.8);
+    filter: blur(40px) brightness(0.4) saturate(0.6);
     transform: scale(1.1);
-    /* Evita bordes del blur en las esquinas */
     z-index: 0;
 }
 
@@ -993,7 +998,7 @@ Con imagen de fondo desenfocada como backdrop
     padding: var(--space-8) var(--space-6);
 
     /* Glass sobre el backdrop */
-    background: rgba(10, 10, 15, 0.65);
+    background: rgba(10, 10, 15, 0.25);
     backdrop-filter: blur(4px);
 }
 
