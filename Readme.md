@@ -21,6 +21,8 @@
 
 ---
 
+
+
 ## ¿Qué hace esta app?
 
 - **Búsqueda en tiempo real** — escribe un título y obtén resultados al instante
@@ -33,32 +35,42 @@
 
 ---
 
+
+
 ## Tecnologías
 
-| Tecnología | Uso |
-|------------|-----|
-| HTML5 semántico | Estructura y accesibilidad (landmarks ARIA) |
-| CSS3 (BEM, Mobile-first) | Estilos, glassmorphism, animaciones |
-| JavaScript Vanilla (ES2020+) | Lógica, fetch, DOM, localStorage |
-| OMDb API | Fuente de datos de películas |
-| Google Fonts | Outfit + Inter |
+
+| Tecnología                   | Uso                                         |
+| ---------------------------- | ------------------------------------------- |
+| HTML5 semántico              | Estructura y accesibilidad (landmarks ARIA) |
+| CSS3 (BEM, Mobile-first)     | Estilos, glassmorphism, animaciones         |
+| JavaScript Vanilla (ES2020+) | Lógica, fetch, DOM, localStorage            |
+| OMDb API                     | Fuente de datos de películas                |
+| Google Fonts                 | Outfit + Inter                              |
+
 
 Sin frameworks. Sin dependencias. Solo el lenguaje.
 
 ---
+
+
 
 ## Estructura del proyecto
 
 ```
 cineSearch/
 ├── index.html      # Estructura semántica — tres vistas en un solo HTML
-├── styles.css      # BEM · Mobile-first · Design tokens con CSS custom properties
-├── app.js          # Lógica completa de la aplicación
+├── css
+|   └── styles.css      # BEM · Mobile-first · Design tokens con CSS custom properties
+├── js
+|   └── app.js          # Lógica completa de la aplicación
 ├── .gitignore      # Archivos excluidos del repositorio
 └── README.md       # Este archivo
 ```
 
 ---
+
+
 
 ## Instalación y uso
 
@@ -67,15 +79,19 @@ Este proyecto no tiene dependencias ni proceso de build.
 ### 1. Clona el repositorio
 
 ```bash
-git clone https://github.com/tu-usuario/cineSearch.git
+git clone https://github.com/Aemete8/Buscador-de-peliculas.git
 cd cineSearch
 ```
+
+
 
 ### 2. Obtén tu API key de OMDb
 
 1. Ve a [https://www.omdbapi.com/apikey.aspx](https://www.omdbapi.com/apikey.aspx)
 2. Elige el plan **Free** (1,000 peticiones/día)
 3. Revisa tu correo y activa la key
+
+
 
 ### 3. Configura la API key
 
@@ -92,6 +108,8 @@ const API_KEY = 'a1b2c3d4';  // tu key real
 > ⚠️ **Nunca subas tu API key a GitHub.** El `.gitignore` ya excluye `.env`.  
 > Para producción, mueve la key a una variable de entorno.
 
+
+
 ### 4. Abre en el navegador
 
 ```bash
@@ -105,6 +123,8 @@ python3 -m http.server 3000
 ```
 
 ---
+
+
 
 ## Cómo funciona
 
@@ -130,21 +150,25 @@ Al volver del detalle, los resultados se muestran desde el estado en memoria —
 
 ---
 
+
+
 ## Decisiones de diseño
 
 **¿Por qué tres vistas en un solo HTML?**  
 Para simular navegación sin router ni framework. Es el patrón más común en proyectos vanilla y muestra comprensión del DOM. Cada vista se alterna con el atributo `hidden`.
 
-**¿Por qué no usar `fetch` al hacer clic en "Volver"?**  
+**¿Por qué no usar** `fetch` **al hacer clic en "Volver"?**  
 Los resultados ya están en `state.currentMovies`. Mostrarlos de nuevo no requiere red — solo re-renderizar lo que ya existe. Es más rápido y consume menos cuota de la API.
 
-**¿Por qué `localStorage` para el historial?**  
+**¿Por qué** `localStorage` **para el historial?**  
 Persiste entre sesiones. El usuario cierra el navegador, vuelve al día siguiente y sus búsquedas siguen ahí. `sessionStorage` se perdería al cerrar la pestaña.
 
 **¿Por qué BEM?**  
 En proyectos sin framework, BEM previene colisiones de estilos y hace que el CSS sea predecible. Cada clase describe exactamente qué es (bloque), de qué forma parte (elemento) y en qué variante está (modificador).
 
 ---
+
+
 
 ## Características destacadas para portafolio
 
@@ -159,6 +183,8 @@ En proyectos sin framework, BEM previene colisiones de estilos y hace que el CSS
 
 ---
 
+
+
 ## Limitaciones conocidas
 
 - La API key está en el cliente — visible en el código fuente. Para producción, se necesita un backend proxy o variables de entorno en un servicio como Netlify/Vercel.
@@ -166,6 +192,8 @@ En proyectos sin framework, BEM previene colisiones de estilos y hace que el CSS
 - Algunos títulos tienen información incompleta ("N/A") — la app lo maneja mostrando texto alternativo.
 
 ---
+
+
 
 ## Posibles mejoras futuras
 
@@ -178,6 +206,8 @@ En proyectos sin framework, BEM previene colisiones de estilos y hace que el CSS
 
 ---
 
+
+
 ## Créditos
 
 - Datos: [OMDb API](https://www.omdbapi.com/) — The Open Movie Database
@@ -185,6 +215,8 @@ En proyectos sin framework, BEM previene colisiones de estilos y hace que el CSS
 - Iconos: SVG inline propios
 
 ---
+
+
 
 ## Licencia
 

@@ -82,23 +82,6 @@
                             aria-expanded="false"
                         />
 
-                        <!-- Icono de lupa dentro del input (decorativo) -->
-                        <svg
-                            class="search__icon"
-                            xmlns="http://www.w3.org/2000/svg"
-                            viewBox="0 0 24 24"
-                            fill="none"
-                            stroke="currentColor"
-                            stroke-width="2"
-                            stroke-linecap="round"
-                            stroke-linejoin="round"
-                            aria-hidden="true"
-                            focusable="false"
-                        >
-                            <circle cx="11" cy="11" r="8" />
-                            <line x1="21" y1="21" x2="16.65" y2="16.65" />
-                        </svg>
-
                         <!-- Dropdown de historial de búsquedas
                         Oculto por defecto, visible cuando el input recibe foco
                         y hay historial guardado en localStorage -->
@@ -115,12 +98,27 @@
 
                     <!-- Botón de búsqueda explícito (accesible y usable en móvil) -->
                     <button
-                        class="search__btn"
                         id="search-btn"
+                        class="search__btn"
                         type="button"
                         aria-label="Buscar"
                     >
-                        Buscar
+                        <svg
+                            class="search__btn-icon"
+                            xmlns="http://www.w3.org/2000/svg"
+                            viewBox="0 0 24 24"
+                            fill="none"
+                            stroke="currentColor"
+                            stroke-width="2"
+                            stroke-linecap="round"
+                            stroke-linejoin="round"
+                            aria-hidden="true"
+                            focusable="false"
+                        >
+                            <circle cx="11" cy="11" r="8" />
+                            <line x1="21" y1="21" x2="16.65" y2="16.65" />
+                        </svg>
+                        <span class="search__btn-text">Buscar</span>
                     </button>
                 </div>
             </div>
