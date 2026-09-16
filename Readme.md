@@ -1,7 +1,7 @@
 # 🎬 CineSearch
 
 > Buscador de películas con detalle completo, paginación e historial de búsquedas.  
-> Proyecto de portafolio — Fase 2 · JavaScript Vanilla · OMDb API
+> Proyecto de portafolio · JavaScript Vanilla · OMDb API
 
 ---
 
@@ -169,7 +169,7 @@ En proyectos sin framework, BEM previene colisiones de estilos y hace que el CSS
 ---
 
 
-
+<!-- 
 ## Características destacadas para portafolio
 
 - ✅ Dos tipos de `fetch` distintos con manejo de errores independiente
@@ -205,7 +205,7 @@ En proyectos sin framework, BEM previene colisiones de estilos y hace que el CSS
 - [ ] Backend proxy para proteger la API key
 
 ---
-
+-->
 
 
 ## Créditos
